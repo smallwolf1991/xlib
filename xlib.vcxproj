@@ -235,7 +235,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MT0|Win32'">
     <OutDir>.\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
-    <IncludePath>$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(WindowsSdk_71A_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MT0|x64'">
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>

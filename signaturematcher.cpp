@@ -911,7 +911,7 @@ namespace signaturematcher
               smtrace << "  识别到mark_right";
               break;
             default:
-              smerr << sig << "未知的标记符：" << hex << "，请指定[LR]";
+              smerr << sig << "未知的标记符：" << sig.ch() << "，请指定[LR]";
               return gk_err_mark_ref;
             }
           sig.step();
