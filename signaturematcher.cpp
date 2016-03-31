@@ -288,10 +288,28 @@ namespace signaturematcher
         ++match_count;
         return true;
         }
-      //! 用以给定内存段细节匹配，默认匹配。需要细节匹配则重载之
-      virtual bool test(const xblk&) const
+      //! 设计防止内存不可读产生异常
+      virtual bool chk(const xblk& blk) const
         {
+#ifdef FOR_RING0
+        const size_t base_page = 0x1000;
+        if(blk.size() == 0) return true;
+        size_t s = (size_t)blk.start() / base_page * base_page;
+        size_t e = ((size_t)blk.end() - 1) / base_page * base_page;
+        do 
+          {
+          if(!MmIsAddressValid((PVOID)s)) return false;
+          s += base_page;
+          }while(s <= e);
         return true;
+#else
+        return FALSE == IsBadReadPtr(blk.start(), blk.size());
+#endif
+        }
+      //! 用以给定内存段细节匹配，默认匹配。需要细节匹配则重载之
+      virtual bool test(const xblk& blk) const
+        {
+        return chk(blk);
         }
       //! 输出原子细节
       virtual void to_atom(line&) const
@@ -529,6 +547,7 @@ namespace signaturematcher
         }
       virtual bool test(const xblk& blk) const
         {
+        if(!chk(blk)) return false;
         smtrace << "    匹配string\r\n"
           << hex2show(str.c_str(), str.size(), 6)
           << hex2show(blk.start(), blk.size(), 6);
@@ -729,6 +748,7 @@ namespace signaturematcher
         }
       virtual bool test(const xblk& blk) const
         {
+        if(!chk(blk)) return false;
         const unsigned char* lp = (const unsigned char*)blk.start();
         smtrace << "    匹配ucbit\r\n" << hex2show(lp, blk.size(), 6);
         for(size_t i = 0; i < blk.size(); ++i)
@@ -765,6 +785,7 @@ namespace signaturematcher
         }
       virtual bool test(const xblk& blk) const
         {
+        if(!chk(blk)) return false;
         const char* lp = (const char*)blk.start();
         smtrace << "    匹配consthex : " << hex << "\r\n"
           << hex2show(lp, blk.size(), 6);
@@ -815,6 +836,7 @@ namespace signaturematcher
         }
       virtual bool test(const xblk& blk) const
         {
+        if(!chk(blk)) return false;
         const unsigned char* lp = (const unsigned char*)blk.start();
         smtrace << "    匹配markref\r\n" << hex2show(lp, blk.size(), 6);
         for(size_t i = 0; i < blk.size(); ++i)
