@@ -286,7 +286,7 @@ namespace signaturematcher
           }
         ++lp;
         ++match_count;
-        return true;
+        return true; 
         }
       //! 设计防止内存不可读产生异常
       virtual bool chk(const xblk& blk) const
@@ -1289,10 +1289,10 @@ namespace signaturematcher
       virtual REPORT_VALUE pick_value(void* start) const
         {
         REPORT_VALUE rv;
-        const unsigned __int32 off = *(unsigned __int32*)match_mem;
+        const __int32 off = *(__int32*)match_mem;
         rv.t = 'p';
         rv.q = 0;
-        rv.p = (void*)((unsigned char*)match_mem + off + sizeof(unsigned __int32));
+        rv.p = (void*)((unsigned char*)match_mem + off + sizeof(off));
         if(isoff) rv.p = (void*)((size_t)rv.p - (size_t)start);
         return rv;
         }
