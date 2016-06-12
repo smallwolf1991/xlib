@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "xlib_base.h"          //+20121107   locked        base/base
+#include "xlib_base.h"          //+20140106   locked        base/base
 //          xlib_link.h
 //          xlib_struct.h
 //          xlib_struct_ring0.h
@@ -45,7 +45,7 @@
 #include "xevent.h"             //+20130301   locked        system_object/event
 #include "Critical.h"           //+20121112   close         system_object/critical
 #include "singleton.h"          //-20121112   locked        container/singleton
-#include "ws_s.h"               //+20140826   locked        string/ws&s
+#include "ws_s.h"               //+20160314   locked        string/ws&s
 //              xlib_nt.h
 #include "ws_utf8.h"            //+20140507   locked        string/ws&utf8
 #include "xblk.h"               //+20131210   locked        memory/xblk
@@ -59,28 +59,32 @@
 //          xmsg.h
 //              ws_s.h
 //              ws_utf8.h
-#include "xline.h"              //-20140113   locked        container/xline
+#include "xline.h"              //-20150122   locked        container/xline
 //          swap.h
 #include "md5.h"                //+20140121   locked        algorithm/md5
 //              swap.h
 //              hex_str.h
-#include "tean.h"               //+20140121   locked        algorithm/tean
+#include "tean.h"               //+20160311   locked        algorithm/tean
 //          xline.h
 //              xrand.h
 #include "aes.h"                //+20131210   locked        algorithm/aes
 //          xline.h
-#include "syssnap.h"            //+20130806   to add        system_object/syssnap
+#include "syssnap.h"            //+20140219   to add        system_object/syssnap
 //          xline.h
 //              xlib_nt.h
 #include "pe.h"                 //+20140508   to add        file/pe
 //          xblk.h
 //              ws_s.h
 //              sysinfo.h
-#include "hook.h"               //+20121112   locked        memory/hook
+#include "hook.h"               //+20160612   check         memory/hook
 //              xlib_nt.h
 //              xblk.h
 //              xline.h
-#include "caller.h"             //+20140225   locked        memory/caller
+//              xmsg.h
+//              hex_str.h
+//              xlog.h
+//              syssnap.h
+#include "caller.h"             //+20150721   locked        memory/caller
 //              hook.h
 //              xevent.h
 #include "xWSA.h"               //+20121113   locked        sock/wsa
@@ -90,14 +94,14 @@
 //          xWSA.h
 //          xline.h
 //          xlog.h
-#include "xNetDl.h"             //+20131019   check         sock/netdl
+#include "xNetDl.h"             //+20150123   check         sock/netdl
 //              xWSA.h
 //              xlog.h
 #include "xServer.h"            //+20121114   close         sock/xserver
 //          xSock.h
 //          ws_s.h
 //          xline.h
-#include "signaturematcher.h"   //+20140401   check         algorithm/signaturematcher
+#include "signaturematcher.h"   //+20160406   check         algorithm/signaturematcher
 //          xline.h
 //          xblk.h
 //              xlog.h

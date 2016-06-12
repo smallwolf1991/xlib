@@ -4,11 +4,16 @@
 #include <string>
 #include <vector>
 
+using std::string;
+using std::vector;
+
 #include "xlib_nt.h"
 #include "xblk.h"
 #include "xline.h"
-
-using namespace std;
+#include "xmsg.h"
+#include "hex_str.h"
+#include "xlog.h"
+#include "syssnap.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -115,10 +120,11 @@ static bool FixJmpCode_CtOff(HookNode* node, const bool calltable_offset);
 static bool HookIn(HookNode* node);
 
 
-
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 #ifndef _WIN64
+static const size_t hookshellcode_normal_prefix = 0x1C;
+static const size_t hookshellcode_ctoff_prefix = 0x1D;
 /*!
   要求前置shellcode如下
 
@@ -295,6 +301,8 @@ static __declspec(naked) void HookShellCode_CtOff()
     }
   }
 #else                 //#ifndef _WIN64
+static const size_t hookshellcode_normal_prefix = 0x3C;
+static const size_t hookshellcode_ctoff_prefix = 0x5E;
 #   ifndef __INTEL_COMPILER
 #   pragma message(" -- 不使用Intel C++ Compiler，HookShellCode版本可能较旧")
 #pragma code_seg(".text")
@@ -1027,28 +1035,15 @@ bool FixShellCode(HookNode* node, void* p_shellcode)
     //前缀的添加完全是为了x64。x86下不使用但不影响
     line& scs = node->shellcode;
 
-    unsigned char head[1 + 1 + sizeof(void*)] =
+    //当一般Hook时，off == 0。Hook2Log时，off != 0
+    const size_t off = (const unsigned char*)node->lpshellcode - scs.c_str();
+
+    const unsigned char head[1 + 1 + sizeof(void*)] =
       { (unsigned char)'\xEB', (unsigned char)sizeof(void*), 0 };
-    scs.insert(0, head, sizeof(head));
+    scs.insert(off, head, sizeof(head));
 
-    if(p_shellcode != nullptr)
-      {
-      if(node->lpshellcode == nullptr)
-        {
-        node->lpshellcode = (void*)(scs.c_str());
-        }
-
-      if(!Hookit(p_shellcode, node->lpshellcode, scs.size()))
-        return false;
-
-      node->lpshellcode = p_shellcode;
-      }
-    else
-      {
-      node->lpshellcode = (void*)(scs.c_str());
-      }
 #ifndef FOR_RING0
-    LPVOID Mem = (LPVOID)node->lpshellcode;
+    LPVOID Mem = (LPVOID)scs.c_str();
     ULONG_PTR Len = (ULONG_PTR)scs.size();
     ULONG_PTR oap;
     if(STATUS_SUCCESS != ZwProtectVirtualMemory(
@@ -1058,6 +1053,25 @@ bool FixShellCode(HookNode* node, void* p_shellcode)
       return false;
       }
 #endif
+    //如果指定了shellcode的空间，则转移之
+    if(p_shellcode != nullptr)
+      {
+      if(!Hookit(p_shellcode, node->lpshellcode, scs.size() - off))
+        return false;
+
+      node->lpshellcode = p_shellcode;
+#ifndef FOR_RING0
+      LPVOID Mem = (LPVOID)node->lpshellcode;
+      ULONG_PTR Len = (ULONG_PTR)(scs.size() - off);
+      ULONG_PTR oap;
+      if(STATUS_SUCCESS != ZwProtectVirtualMemory(
+        GetCurrentProcess(), &Mem, &Len, PAGE_EXECUTE_READWRITE, &oap))
+        {
+        SetLastHookErr(HookErr_AntiShellCodeDEP_Fail);
+        return false;
+        }
+#endif
+      }
     *(void**)((unsigned char*)node->lpshellcode + 2) = node->lpshellcode;
 
     SetLastHookErr(HookErr_Success);
@@ -1076,6 +1090,8 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
   XLIB_TRY
     {
     line& scs = node->shellcode;
+
+    node->lpshellcode = (void*)(scs.c_str() + scs.size());
 
     if(!docodeend)    //代码前行需要先写原始代码
       {
@@ -1124,6 +1140,8 @@ bool MakeShellCode_CtOff(HookNode* node, const bool docallend, const intptr_t ex
   XLIB_TRY
     {
     line& scs = node->shellcode;
+
+    node->lpshellcode = (void*)(scs.c_str() + scs.size());
 
     static const intptr_t gk_hook_default_argc = 0x8;     //默认参数8个
     intptr_t hookargc = gk_hook_default_argc + expandargc;
@@ -1285,7 +1303,7 @@ HookNode* Hook(void*              hookmem,
                void*              p_shellcode)
   {
   //////////////////////////////////////////////////////////////////////////第一步：MakeNode
-  HookNode* node = MakeNode(hookmem,hooksize,routine);
+  HookNode* node = MakeNode(hookmem, hooksize, routine);
   if(node == nullptr) return nullptr;
   //////////////////////////////////////////////////////////////////////////第二步：MakeShellCode
   if(!MakeShellCode_Normal(node, docodeend))
@@ -1321,7 +1339,7 @@ HookNode* Hook(void*              hookmem,
                const intptr_t     expandargc)
   {
   //////////////////////////////////////////////////////////////////////////第一步：MakeNode
-  HookNode* node = MakeNode(hookmem,routine,calltable_offset);
+  HookNode* node = MakeNode(hookmem, routine, calltable_offset);
   if(node == nullptr) return nullptr;
   //////////////////////////////////////////////////////////////////////////第二步：MakeShellCode
   if(!MakeShellCode_CtOff(node, docallend, expandargc))
@@ -1335,7 +1353,7 @@ HookNode* Hook(void*              hookmem,
     return nullptr;
     }
   //////////////////////////////////////////////////////////////////////////第三步：FixJmpCode
-  if(!FixJmpCode_CtOff(node,calltable_offset))
+  if(!FixJmpCode_CtOff(node, calltable_offset))
     {
     delete node;
     return nullptr;
@@ -1349,7 +1367,7 @@ HookNode* Hook(void*              hookmem,
   return node;
   }
 
-bool UnHook(HookNode* node,const bool errbreak)
+bool UnHook(HookNode* node, const bool errbreak)
   {
   XLIB_TRY
     {
@@ -1357,7 +1375,7 @@ bool UnHook(HookNode* node,const bool errbreak)
       (node->byte2cover > sizeof(node->newcode))
       ? sizeof(node->newcode) : node->byte2cover;
 
-    if(memcmp(node->mem,node->oldcode,thisbyte2cover) == 0)
+    if(memcmp(node->mem, node->oldcode, thisbyte2cover) == 0)
       {
       DeleteNode(node);
       SetLastHookErr(HookErr_UnHook_Restore);
@@ -1365,7 +1383,7 @@ bool UnHook(HookNode* node,const bool errbreak)
       }
     else
       {
-      if(memcmp(node->mem,node->newcode,thisbyte2cover) == 0)
+      if(memcmp(node->mem, node->newcode, thisbyte2cover) == 0)
         {
         SetLastHookErr(HookErr_UnHook_BeCover);
         if(errbreak)  return false;
@@ -1437,4 +1455,942 @@ bool MoveHookCallTableShellCode(void* mem)
     }
   SetLastHookErr(HookErr_MovShellCode_Fail);
   return false;
+  }
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// 以下是附加的Hook to Log的代码
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+//!< 词法类型
+enum LexicalType : unsigned char
+  {
+  LT_Error,
+  LT_Value,
+  LT_LeftParentheses,
+  LT_RightParentheses,
+  LT_LeftBracket,
+  LT_RightBracket,
+  LT_Len,
+  LT_Mul,
+  LT_Div,
+  LT_Mod,
+  LT_Add,
+  LT_Sub,
+  LT_Shl,
+  LT_Shr,
+  LT_And,
+  LT_Xor,
+  LT_Or,
+  };
+
+//! 词法
+struct Lexical
+  {
+  LexicalType type;       //!< 词法类型
+  string      code;       //!< 运算机器码
+  };
+
+//! 指定值，生成运算机器码
+static string MakeValueCode(const size_t value)
+  {
+  string ret;
+#ifndef _WIN64
+  //push imm
+  ret.push_back('\x68');
+  ret.append((const char*)&value, sizeof(value));
+#else
+  //mov rax, imm   push rax
+  ret.push_back('\x48');
+  ret.push_back('\xB8');
+  ret.append((const char*)&value, sizeof(value));
+  ret.push_back('\x50');
+#endif
+  return ret;
+  }
+
+//! 指定寄存器名，生成运算机器码，如果指定的名字错误，返回nullptr
+static const char* MakeRegs(const char* exp)
+  {
+  /*!
+    寄存器名对应的运算机器码
+    由于Ring0的SGI STL<map>不支持列表初始化，同时Ring0也不支持复杂全局对象初始化，故采用此列表格式
+    特意去除\x00编码
+  */
+#ifndef _WIN64
+  static const char* regsmap[] =
+    {
+    //push [ebp + XX]
+    "eax", "\xFF\x75\x1C",
+    "ecx", "\xFF\x75\x18",
+    "edx", "\xFF\x75\x14",
+    "ebx", "\xFF\x75\x10",
+    "esp", "\xFF\x75\x0C",
+    "ebp", "\xFF\x75\x08",
+    "esi", "\xFF\x75\x04",
+    //xor eax, eax   push [ebp + eax]
+    "edi", "\x33\xC0\xFF\x34\x28",
+    "efg", "\xFF\x75\x20",
+    "eip", "\xFF\x75\x24",
+    //movzx eax, byte ptr [ebp + XX]  push eax
+    "al", "\x0F\xB6\x45\x1C\x50",
+    "cl", "\x0F\xB6\x45\x18\x50",
+    "dl", "\x0F\xB6\x45\x14\x50",
+    "bl", "\x0F\xB6\x45\x10\x50",
+    //movzx eax, byte ptr [ebp + XX + 1] push eax
+    "ah", "\x0F\xB6\x45\x1D\x50",
+    "ch", "\x0F\xB6\x45\x19\x50",
+    "dh", "\x0F\xB6\x45\x15\x50",
+    "bh", "\x0F\xB6\x45\x11\x50",
+    //movzx eax, word ptr [ebp + XX]  push eax
+    "ax", "\x0F\xB7\x45\x1C\x50",
+    "cx", "\x0F\xB7\x45\x18\x50",
+    "dx", "\x0F\xB7\x45\x14\x50",
+    "bx", "\x0F\xB7\x45\x10\x50",
+    "sp", "\x0F\xB7\x45\x0C\x50",
+    "bp", "\x0F\xB7\x45\x08\x50",
+    "si", "\x0F\xB7\x45\x04\x50",
+    //xor eax, eax   movzx eax, word ptr [ebp + eax]   push eax
+    "di", "\x33\xC0\x0F\xB7\x04\x28\x50",
+    };
+#else
+  static const char* regsmap[] =
+    {
+    //xor rax, rax  push [rbp + rax]
+    "rcx", "\x48\x33\xC0\xFF\x34\x28",
+    //push [rbp + XX]
+    "rdx", "\xFF\x75\x08",
+    "r8", "\xFF\x75\x10",
+    "r9", "\xFF\x75\x18",
+    "rax", "\xFF\x75\x20",
+    "rbx", "\xFF\x75\x28",
+    "rsp", "\xFF\x75\x30",
+    "rbp", "\xFF\x75\x38",
+    "rsi", "\xFF\x75\x40",
+    "rdi", "\xFF\x75\x48",
+    "r10", "\xFF\x75\x50",
+    "r11", "\xFF\x75\x58",
+    "r12", "\xFF\x75\x60",
+    "r13", "\xFF\x75\x68",
+    "r14", "\xFF\x75\x70",
+    "r15", "\xFF\x75\x78",
+    //xor rax, rax   mov al, XX   push [rbp + rax]
+    "rfg", "\x48\x33\xC0\xB0\x80\xFF\x34\x28",
+    "rip", "\x48\x33\xC0\xB0\x88\xFF\x34\x28",
+    //xor rax,rax  dec rax  movzx rax, byte ptr [rbp+rax+1]   push rax
+    "cl", "\x48\x33\xC0\x48\xFF\xC8\x48\x0F\xB6\x44\x05\x01\x50",
+    //movzx rax, byte [rbp + XX]  push rax
+    "dl", "\x48\x0F\xB6\x45\x08\x50",
+    "r8b", "\x48\x0F\xB6\x45\x10\x50",
+    "r9b", "\x48\x0F\xB6\x45\x18\x50",
+    "al", "\x48\x0F\xB6\x45\x20\x50",
+    "bl", "\x48\x0F\xB6\x45\x28\x50",
+    "spl", "\x48\x0F\xB6\x45\x30\x50",
+    "bpl", "\x48\x0F\xB6\x45\x38\x50",
+    "sil", "\x48\x0F\xB6\x45\x40\x50",
+    "dil", "\x48\x0F\xB6\x45\x48\x50",
+    "r10b", "\x48\x0F\xB6\x45\x50\x50",
+    "r11b", "\x48\x0F\xB6\x45\x58\x50",
+    "r12b", "\x48\x0F\xB6\x45\x60\x50",
+    "r13b", "\x48\x0F\xB6\x45\x68\x50",
+    "r14b", "\x48\x0F\xB6\x45\x70\x50",
+    "r15b", "\x48\x0F\xB6\x45\x78\x50",
+    //movzx rax, byte ptr [rbp+ XX +1]   push rax
+    "ch", "\x48\x0F\xB6\x45\x01\x50",
+    "dh", "\x48\x0F\xB6\x45\x09\x50",
+    "ah", "\x48\x0F\xB6\x45\x11\x50",
+    "bh", "\x48\x0F\xB6\x45\x19\x50",
+    //xor rax,rax  dec rax  movzx rax, word ptr [rbp+rax+1]   push rax
+    "cx", "\x48\x33\xC0\x48\xFF\xC8\x48\x0F\xB7\x44\x05\x01\x50",
+    //movzx rax, word ptr [rbp + XX]  push rax
+    "dx", "\x48\x0F\xB7\x45\x08\x50",
+    "r8w", "\x48\x0F\xB7\x45\x10\x50",
+    "r9w", "\x48\x0F\xB7\x45\x18\x50",
+    "ax", "\x48\x0F\xB7\x45\x20\x50",
+    "bx", "\x48\x0F\xB7\x45\x28\x50",
+    "sp", "\x48\x0F\xB7\x45\x30\x50",
+    "bp", "\x48\x0F\xB7\x45\x38\x50",
+    "si", "\x48\x0F\xB7\x45\x40\x50",
+    "di", "\x48\x0F\xB7\x45\x48\x50",
+    "r10w", "\x48\x0F\xB7\x45\x50\x50",
+    "r11w", "\x48\x0F\xB7\x45\x58\x50",
+    "r12w", "\x48\x0F\xB7\x45\x60\x50",
+    "r13w", "\x48\x0F\xB7\x45\x68\x50",
+    "r14w", "\x48\x0F\xB7\x45\x70\x50",
+    "r15w", "\x48\x0F\xB7\x45\x78\x50",
+    //xor rax,rax  xor rcx,rcx  dec rcx  mov eax, [rbp+rcx+1]  push rax
+    "ecx", "\x48\x33\xC0\x48\x33\xC9\x48\xFF\xC9\x8B\x44\x0D\x01\x50",
+    //xor rax,rax  mov eax, [rbp + 1C]  push rax
+    "edx", "\x48\x33\xC0\x8B\x45\x08\x50",
+    "r8d", "\x48\x33\xC0\x8B\x45\x10\x50",
+    "r9d", "\x48\x33\xC0\x8B\x45\x18\x50",
+    "eax", "\x48\x33\xC0\x8B\x45\x20\x50",
+    "ebx", "\x48\x33\xC0\x8B\x45\x28\x50",
+    "esp", "\x48\x33\xC0\x8B\x45\x30\x50",
+    "ebp", "\x48\x33\xC0\x8B\x45\x38\x50",
+    "esi", "\x48\x33\xC0\x8B\x45\x40\x50",
+    "edi", "\x48\x33\xC0\x8B\x45\x48\x50",
+    "r10d", "\x48\x33\xC0\x8B\x45\x50\x50",
+    "r11d", "\x48\x33\xC0\x8B\x45\x58\x50",
+    "r12d", "\x48\x33\xC0\x8B\x45\x60\x50",
+    "r13d", "\x48\x33\xC0\x8B\x45\x68\x50",
+    "r14d", "\x48\x33\xC0\x8B\x45\x70\x50",
+    "r15d", "\x48\x33\xC0\x8B\x45\x78\x50",
+    };
+#endif
+  string ee(exp);
+  for(auto& ch : ee)
+    {
+    ch = (char)tolower(ch);
+    }
+  size_t count = _countof(regsmap);
+  for(size_t i = 0; i < count; i += 2)
+    {
+    if(0 == strcmp(regsmap[i], ee.c_str()))
+      {
+      return regsmap[i + 1];
+      }
+    }
+  return nullptr;
+  }
+
+//! 指定表达式，解析成运算机器码，返回空串表示错误
+static string MakeExpression(const char* exp)
+  {
+  if(exp == nullptr || strlen(exp) == 0)
+    {
+    SetLastHookErr(HookErr_EmptyExpression);
+    return string();
+    }
+  //先判定是不是寄存器（小写），如果是，则直接返回
+  auto code = MakeRegs(exp);
+  if(code != nullptr)
+    {
+    return string(code);
+    }
+  //再判定是不是常量值，如果是，也返回
+  size_t readlen = 0;
+  size_t value = str2hex(exp, &readlen, 0, true);
+  if(readlen != 0)
+    {
+    return MakeValueCode(value);
+    }
+#ifndef FOR_RING0
+  //再解析是不是模块，先默认全部为模块名
+  HMODULE mod = GetModuleHandleA(exp);
+  if(mod != nullptr)
+    {
+    return MakeValueCode((size_t)mod);
+    }
+  //尝试提取模块名，以最后一个.为分隔
+  const string expression(exp);
+  auto itt = expression.end();
+  for(auto it = expression.begin(); it != expression.end(); ++it)
+    {
+    if(*it == '.') itt = it;
+    }
+  //如果没有分隔符，全部模块名也不对，则此表达式无法解析
+  if(itt == expression.end())
+    {
+    SetLastHookErr(HookErr_InvailExpression);
+    return string();
+    }
+  string modname(expression.begin(), itt);
+  if(modname.empty())
+    {
+    mod = GetModuleHandle(nullptr);
+    }
+  else
+    {
+    mod = GetModuleHandleA(modname.c_str());
+    }
+  if(mod == nullptr)
+    {
+    SetLastHookErr(HookErr_InvaildModuleName);
+    return string();
+    }
+  //尝试提取offset或procname
+  string offfun(itt + 1, expression.end());
+  //如果为空，则直接返回模块基址
+  if(offfun.empty())
+    {
+    return MakeValueCode((size_t)mod);
+    }
+  //尝试优先处理成offset
+  readlen = 0;
+  value = str2hex(offfun, &readlen, 0, true);
+  if(readlen != 0)
+    {
+    return MakeValueCode(value + (size_t)mod);
+    }
+  value = (size_t)GetProcAddress(mod, offfun.c_str());
+  if(value == 0)
+    {
+    SetLastHookErr(HookErr_InvaildProcAddress);
+    return string();
+    }
+  return MakeValueCode(value);
+#else
+  SysDriverSnap sds;
+  //额外处理"."
+  if(0 == strcmp(".", exp))
+    {
+    return MakeValueCode((size_t)sds.begin()->ImageBaseAddress);
+    }
+  for(const SYSTEM_MODULE& st : sds)
+    {
+    if(0 == strcmp((const char*)st.Name + st.NameOffset, exp))
+      {
+      return MakeValueCode((size_t)st.ImageBaseAddress);
+      }
+    }
+  SetLastHookErr(HookErr_InvailExpression);
+  return string();
+#endif
+  }
+
+//! 指定后缀，解析成运算机器码，如果指定的后缀错误，返回nullptr
+static const char* MakeSufFix(const char suf)
+  {
+  switch(suf)
+    {
+#ifndef _WIN64
+    case 'b': return "\x58\x0F\xBE\xC0\x50";    //pop eax   movsx eax,al  push eax
+    case 'B': return "\x58\x0F\xB6\xC0\x50";    //pop eax   movzx eax,al  push eax
+    case 'w': return "\x58\x0F\xBF\xC0\x50";    //pop eax   movsx eax,ax  push eax
+    case 'W': return "\x58\x0F\xB7\xC0\x50";    //pop eax   movzx eax,ax  push eax
+#else
+    case 'b': return "\x58\x48\x0F\xBE\xC0\x50";  //pop rax   movsx rax,al  push rax
+    case 'B': return "\x58\x48\x0F\xB6\xC0\x50";  //pop rax   movzx rax,al  push rax
+    case 'w': return "\x58\x48\x0F\xBF\xC0\x50";  //pop rax   movsx rax,ax  push rax
+    case 'W': return "\x58\x48\x0F\xB7\xC0\x50";  //pop rax   movzx rax,ax  push rax
+    case 'd': return "\x48\x0F\xBE\x44\x24\x03\x48\xC1\xEB\x20\x89\x44\x24\x04";
+      //movsx rax,byte ptr [rsp+3]   shr rax,20  mov dword ptr [rsp+4],eax
+    case 'D': return "\x48\x33\xC0\x89\x44\x24\x04";
+      //xor rax,rax  mov dword ptr [rsp+4],eax
+#endif
+    default:
+      break;
+    }
+  return nullptr;
+  }
+
+//! 指定词组，生成运算机器码
+static string DoLexical(vector<Lexical>& vec);
+
+//! 指定词组，括号限定类型，聚合机器码
+static bool DoFix(vector<Lexical>& vec, LexicalType left, LexicalType right)
+  {
+  while(true)
+    {
+    auto its = vec.begin();
+    for(; its != vec.end(); ++its)
+      {
+      if(its->type == left)  break;
+      }
+    if(its == vec.end())  break;
+    //如果存在左限定符，则开始寻找匹配的右限定符
+    intptr_t leftfind = 0;
+    auto ite = vec.end();
+    for(auto it = its + 1; it != vec.end(); ++it)
+      {
+      if(it->type == left)
+        {
+        ++leftfind;
+        continue;
+        }
+      if(it->type == right)
+        {
+        if(leftfind == 0)
+          {
+          ite = it;
+          break;
+          }
+        --leftfind;
+        }
+      }
+    if(ite == vec.end())
+      {
+      SetLastHookErr(HookErr_NoMatch);
+      return false;
+      }
+    if(ite + 1 - its <= 2)
+      {
+      SetLastHookErr(HookErr_MatchEmpty);
+      return false;
+      }
+    vector<Lexical> vv(its + 1, ite);   //提取括号中间的表达式
+    Lexical lex = { LT_Value, DoLexical(vv) + ite->code };  //生成算式
+    vec.insert(vec.erase(its, ite + 1), lex); //替换词组
+    }
+  return true;
+  }
+
+//! 指定词组，与需要处理的操作符，聚合机器码
+static bool DoOperator(vector<Lexical>& vec, const LexicalType* op)
+  {
+  while(true)
+    {
+    auto it = vec.begin();
+    for(; it != vec.end(); ++it)
+      {
+      bool find = false;
+      for(const LexicalType* lt = op; *lt != LT_Error; ++lt)
+        {
+        if(*lt == it->type)
+          {
+          find = true;
+          break;
+          }
+        }
+      if(find)  break;
+      }
+    if(it == vec.end()) break;
+    //操作符需要左右操作数
+    auto itl = it - 1;
+    if(it == vec.begin() || itl->type != LT_Value)
+      {
+      SetLastHookErr(HookErr_NeedLeftOp);
+      return false;
+      }
+    auto itr = it + 1;
+    if(itr == vec.end() || itr->type != LT_Value)
+      {
+      SetLastHookErr(HookErr_NeedRightOp);
+      return false;
+      }
+    Lexical lex = { LT_Value, itl->code + itr->code + it->code }; //后缀式
+    vec.insert(vec.erase(itl, itr + 1), lex); //替换词组
+    }
+  return true;
+  }
+
+//! 指定词组，生成最后的值算式
+static string DoLexical(vector<Lexical>& vec)
+  {
+  //优先判定一下单值的情况
+  if(vec.size() == 1)
+    {
+    const auto& vv = *vec.begin();
+    if(vv.type != LT_Value)
+      {
+      SetLastHookErr(HookErr_NeedValue);
+      return string();
+      }
+    return vv.code;
+    }
+  //扫描()
+  if(!DoFix(vec, LT_LeftParentheses, LT_RightParentheses))  return string();
+  //扫描[]
+  if(!DoFix(vec, LT_LeftBracket, LT_RightBracket))  return string();
+  //扫描#/##
+  static const LexicalType lt0[] = { LT_Len, LT_Error };
+  if(!DoOperator(vec, lt0))  return string();
+  //扫描*/%
+  static const LexicalType lt1[] = { LT_Mul, LT_Div, LT_Mod, LT_Error };
+  if(!DoOperator(vec, lt1))  return string();
+  //扫描+-
+  static const LexicalType lt2[] = { LT_Add, LT_Sub, LT_Error };
+  if(!DoOperator(vec, lt2))  return string();
+  //扫描<< >>
+  static const LexicalType lt3[] = { LT_Shl, LT_Shr, LT_Error };
+  if(!DoOperator(vec, lt3))  return string();
+  //扫描&
+  static const LexicalType lt4[] = { LT_And, LT_Error };
+  if(!DoOperator(vec, lt4))  return string();
+  //扫描^
+  static const LexicalType lt5[] = { LT_Xor, LT_Error };
+  if(!DoOperator(vec, lt5))  return string();
+  //扫描|
+  static const LexicalType lt6[] = { LT_Or, LT_Error };
+  if(!DoOperator(vec, lt6))  return string();
+  //解析结束后，应该只剩一个值
+  if(vec.size() != 1)
+    {
+    SetLastHookErr(HookErr_MoreExpression);
+    return string();
+    }
+  const auto& vv = *vec.begin();
+  if(vv.type != LT_Value)
+    {
+    SetLastHookErr(HookErr_InvailExpression);
+    return string();
+    }
+  return vv.code;
+  }
+
+//! 指定数据描述，生成运算机器码，返回空串表示错误
+static string MakeDescibe(const char* descibe)
+  {
+  if(descibe == nullptr)
+    {
+    SetLastHookErr(HookErr_EmptyExpression);
+    return string();
+    }
+  //移除空白
+  string desc;
+  for(; *descibe != '\0'; ++descibe)
+    {
+    if(*descibe != ' ' && *descibe != '\t' && *descibe != '\r' && *descibe != '\n')
+      desc.push_back(*descibe);
+    }
+  if(desc.empty())
+    {
+    SetLastHookErr(HookErr_EmptyExpression);
+    return string();
+    }
+  //添加结尾0，方便后继处理
+  desc.push_back('\0');
+  vector<Lexical> vec;            //词法集合
+  string exp;                     //表达式缓存
+  for(auto it = desc.begin(); it != desc.end(); ++it)
+    {
+    const char ch = *it;
+    switch(ch)
+      {
+      case '(':   case ')':   case '[':   case ']':
+      case '*':   case '/':   case '%':   case '+':
+      case '-':   case '<':   case '>':   case '&':
+      case '^':   case '|':   case '\0':
+        if(!exp.empty())
+          {
+          Lexical lex = { LT_Value, MakeExpression(exp.c_str()) };
+          vec.push_back(lex);
+          exp.clear();
+          }
+        break;
+      }
+    if(ch == '\0')  break;
+    Lexical lex;
+    switch(ch)
+      {
+      case '+':
+        {
+        lex =
+          {
+          LT_Add,
+#ifndef _WIN64
+          string("\x58\x01\x04\x24")  //pop eax   add [esp], eax
+#else
+          string("\x58\x48\x01\x04\x24")  //pop rax   add [rsp], rax
+#endif
+          };
+        break;
+        }
+      case '*':
+        {
+        lex =
+          {
+          LT_Mul,
+#ifndef _WIN64
+          string("\x59\x58\x99\xF7\xE1\x50")  //pop ecx pop eax cdq mul ecx push eax
+#else
+          string("\x59\x58\x99\x48\xF7\xE1\x50")  //pop rcx pop rax cdq mul rcx push rax
+#endif
+          };
+        break;
+        }
+      case '[':
+        {
+        lex = { LT_LeftBracket };
+        break;
+        }
+      case ']':
+        {
+#ifndef _WIN64
+        string ss("\x58\x8B\x00\x50", 4);
+#else
+        string ss("\x58\x48\x8B\x00\x50", 5);
+#endif
+        if(desc.end() != (it + 1))
+          {
+          auto code = MakeSufFix(*(it + 1));
+          if(code != nullptr)
+            {
+            ++it;
+            ss += code;
+            }
+          }
+        lex = { LT_RightBracket, ss };
+        break;
+        }
+      case '(':
+        {
+        lex = { LT_LeftParentheses };
+        break;
+        }
+      case ')':
+        {
+        string code;
+        if(desc.end() != (it + 1))
+          {
+          auto c = MakeSufFix(*(it + 1));
+          if(c != nullptr)
+            {
+            code = string(c);
+            ++it;
+            }
+          }
+        lex = { LT_RightParentheses, code };
+        break;
+        }
+      case '#':
+        {
+        //取长度操作，前置放一个伪造的空值，便于后继解析
+        lex = { LT_Value };
+        vec.push_back(lex);
+        string code;
+        if(desc.end() != (it + 1) && *(it + 1) == '#')
+          {
+          ++it;
+#ifndef _WIN64
+          //xchg [esp],edi  pushfd  cld  xor eax,eax  xor ecx,ecx  dec ecx  repne scasw
+          //popfd  pop edi  not ecx  push ecx
+          code.assign("\x87\x3C\x24\x9C\xFC\x33\xC0\x33\xC9\x49\x66\xF2\xAE\x9D\x5F\xF7\xD1\x51");
+#else
+          //xchg [rsp],rdi  pushfq  cld  xor rax,rax  xor rcx,rcx  dec rcx  repne scasw
+          //popfq  pop rdi  not rcx  push rcx
+          code.assign("\x48\x87\x3C\x24\x9C\xFC\x48\x33\xC0\x48\x33\xC9\x48\xFF\xC9\xF2\x66\xAF\x9D\x5F\x48\xF7\xD1\x51");
+#endif
+          }
+        else
+          {
+#ifndef _WIN64
+          //xchg [esp],edi  pushfd  cld  xor eax,eax  xor ecx,ecx  dec ecx  repne scasb
+          //popfd  pop edi  not ecx  push ecx
+          code.assign("\x87\x3C\x24\x9C\xFC\x33\xC0\x33\xC9\x49\xF2\xAE\x9D\x5F\xF7\xD1\x51");
+#else
+          //xchg [rsp],rdi  pushfq  cld  xor rax,rax  xor rcx,rcx  dec rcx  repne scasb
+          //popfq  pop rdi  not rcx  push rcx
+          code.assign("\x48\x87\x3C\x24\x9C\xFC\x48\x33\xC0\x48\x33\xC9\x48\xFF\xC9\xF2\xAE\x9D\x5F\x48\xF7\xD1\x51");
+#endif
+          }
+        lex = { LT_Len, code };
+        break;
+        }
+      case '/':
+        {
+        lex =
+          {
+          LT_Div,
+#ifndef _WIN64
+          string("\x59\x58\x99\xF7\xF1\x50")  //pop ecx pop eax cdq div ecx push eax
+#else
+          string("\x59\x58\x99\x48\xF7\xF1\x50")  //pop rcx pop rax cdq div rcx push rax
+#endif
+          };
+        break;
+        }
+      case '%':
+        {
+        lex =
+          {
+          LT_Mod,
+#ifndef _WIN64
+          string("\x59\x58\x99\xF7\xF1\x52")  //pop ecx pop eax cdq div ecx push edx
+#else
+          string("\x59\x58\x99\x48\xF7\xF1\x52")  //pop rcx pop rax cdq div rcx push rdx
+#endif
+          };
+        break;
+        }
+      case '-':
+        {
+        lex =
+          {
+          LT_Sub,
+#ifndef _WIN64
+          string("\x58\x29\x04\x24")  //pop eax  sub [esp], eax
+#else
+          string("\x58\x48\x29\x04\x24")  //pop rax  sub [rsp], rax
+#endif
+          };
+        break;
+        }
+      case '<':
+        {
+        ++it;
+        if(desc.end() == it || *it != '<')
+          {
+          SetLastHookErr(HookErr_Shl);
+          return string();
+          }
+        lex =
+          {
+          LT_Shl,
+#ifndef _WIN64
+          string("\x59\x58\xD3\xE0\x50")  //pop ecx  pop eax  shl eax, cl  push eax
+#else
+          string("\x59\x58\x48\xD3\xE0\x50")  //pop rcx  pop rax  shl rax, cl  push rax
+#endif
+          };
+        break;
+        }
+      case '>':
+        {
+        ++it;
+        if(desc.end() == it || *it != '>')
+          {
+          SetLastHookErr(HookErr_Shl);
+          return string();
+          }
+        lex =
+          {
+          LT_Shr,
+#ifndef _WIN64
+          string("\x59\x58\xD3\xE8\x50")  //pop ecx  pop eax  shr eax, cl  push eax
+#else
+          string("\x59\x58\x48\xD3\xE8\x50")  //pop rcx  pop rax  shr rax, cl  push rax
+#endif
+          };
+        break;
+        }
+      case '&':
+        {
+        lex =
+          {
+          LT_And,
+#ifndef _WIN64
+          string("\x58\x21\x04\x24")  //pop eax  and [esp], eax
+#else
+          string("\x58\x48\x21\x04\x24")  //pop rax  and [rsp], rax
+#endif
+          };
+        break;
+        }
+      case '^':
+        {
+        lex =
+          {
+          LT_Xor,
+#ifndef _WIN64
+          string("\x58\x31\x04\x24")  //pop eax  xor [esp], eax
+#else
+          string("\x58\x48\x31\x04\x24")  //pop rax  xor [rsp], rax
+#endif
+          };
+        break;
+        }
+      case '|':
+        {
+        lex =
+          {
+          LT_Or,
+#ifndef _WIN64
+          string("\x58\x09\x04\x24")  //pop eax  or [esp], eax
+#else
+          string("\x58\x48\x09\x04\x24")  //pop rax  or [rsp], rax
+#endif
+          };
+        break;
+        }
+      default:
+        exp.push_back(ch);
+        continue;
+      }
+    vec.push_back(lex);
+    }
+  const string code(DoLexical(vec));
+  if(code.empty())  return string();
+#ifndef _WIN64
+  //push ebp   mov ebp, [rsp + 8]   ...  pop eax  pop ebp  retn
+  return string("\x55\x8B\x6C\x24\x08") + code + string("\x58\x5D\xC3");
+#else
+  //push rbp   mov rbp, rcx  ...  pop rax  pop rbp  retn   注意x64的传参
+  return string("\x55\x48\x89\xCD") + code + string("\x58\x5D\xC3");
+#endif
+  }
+
+//! 默认的数据输出函数，只是简单的转换成Dump格式
+static void DefaultHook2LogOut(const char* const   head,
+                               const char* const   buf,
+                               const size_t        size)
+  {
+  XLIB_TRY
+    {
+    if(head != nullptr)
+      {
+      xlog() << head;
+      }
+    xlog() << hex2show(buf, size);
+    }
+  XLIB_CATCH
+    {
+    xerr << xfunexpt;
+    }
+  }
+
+//! Hook的输出处理封装，主要是引入异常处理，因为生成的硬编码在x64下难以引入异常处理
+typedef size_t (__cdecl *DescibeFunction)(CPU_ST* lpcpu);
+static void __cdecl Hook2LogRoutine(CPU_ST*             lpcpu,
+                                    DescibeFunction     datas,
+                                    DescibeFunction     lens,
+                                    const char* const   head,
+                                    hook2log_out_func   datafunc)
+  {
+  XLIB_TRY
+    {
+    const char* const data = (const char*)datas(lpcpu);
+    const size_t len = lens(lpcpu);
+    if(datafunc == nullptr) DefaultHook2LogOut(head, data, len);
+    else  datafunc(head, data, len);
+    }
+  XLIB_CATCH
+    {
+    xerr << "Hook2Log Routine Exception";
+    }
+  }
+
+//! 指定数据描述、长度描述、头部数据说明、数据输出函数、头部
+static string MakeCode(const char*        data_descibe,
+                       const char*        len_descibe,
+                       const char*        head,
+                       hook2log_out_func  datafunc)
+  {
+  const string datas = MakeDescibe(data_descibe);
+  if(datas.empty()) return string();
+
+  const string lens = MakeDescibe(len_descibe);
+  if(lens.empty()) return string();
+
+  if(head == nullptr) head = "";
+  const string heads(head);
+
+  string code;
+  //输出函数地址入栈
+  code += MakeValueCode((size_t)datafunc);
+  //头部说明入栈
+  code.push_back('\xE8');
+  AddrDisp size = (AddrDisp)heads.size() + sizeof(size_t);
+  code.append((const char*)&size, sizeof(size));
+  code += heads;
+  code.append(sizeof(size_t), '\0');
+  //长度函数入栈
+  code.push_back('\xE8');
+  size = (AddrDisp)lens.size();
+  code.append((const char*)&size, sizeof(size));
+  code += lens;
+  //数据函数入栈
+  code.push_back('\xE8');
+  size = (AddrDisp)datas.size();
+  code.append((const char*)&size, sizeof(size));
+  code += datas;
+#ifndef _WIN64
+  //push [esp+14]
+  code.append("\xFF\x74\x24\x14");
+  //mov eax,Routine
+  code.append("\xB8");
+  const size_t lpRoutine = (size_t)Hook2LogRoutine;
+  code.append((const char*)&lpRoutine, sizeof(lpRoutine));
+  //call eax  add esp, 14   retn 4      x86的Hook Routine是__stdcall
+  code.append("\xFF\xD0\x83\xC4\x14\xC2\x04\x00", 8);
+#else
+  //push [rsp + 28]  rcx rdx r8 r9    x64的调用约定需要额外做寄存器
+  code.append("\x48\xFF\x74\x24\x28");
+  code.append("\x48\x8B\x0C\x24");
+  code.append("\x48\x8B\x54\x24\x08");
+  code.append("\x4C\x8B\x44\x24\x10");
+  code.append("\x4C\x8B\x4C\x24\x18");
+  //mov rax, rRoutine
+  code.append("\x48\xB8");
+  const size_t lpRoutine = (size_t)Hook2LogRoutine;
+  code.append((const char*)&lpRoutine, sizeof(lpRoutine));
+  //call rax  add rsp, 28   retn   x64的Hook Routine遵循x64调用约定
+  code.append("\xFF\xD0\x48\x83\xC4\x28\xC3");
+#endif
+  return code;
+  }
+
+HookNode* Hook2Log(void*              hookmem,
+                   const size_t       hooksize,
+                   const char*        data_descibe,
+                   const char*        len_descibe,
+                   const bool         docodeend,
+                   const char*        head_msg,
+                   hook2log_out_func  log_out_func,
+                   void*              p_shellcode)
+  {
+  //先生成运算码
+  string code(MakeCode(data_descibe, len_descibe, head_msg, log_out_func));
+  if(code.empty())  return nullptr;
+
+  //生成node，Routine此时胡乱指定，没有实际意义
+  HookNode* node = MakeNode(hookmem, hooksize, (void*)code.c_str());
+  if(node == nullptr) return nullptr;
+
+  //复制运算码，增大shellcode对象容量，以避免在生成后面shellcode时，位置变化
+  node->shellcode.assign((const unsigned char*)code.c_str(), code.size());
+  node->shellcode.reserve(code.size() + hookshellcode_normal_prefix * 2);
+
+  //写入真实的Routine地址，即生成的运算码
+  node->routine = (void*)node->shellcode.c_str();
+
+  if(!MakeShellCode_Normal(node, docodeend))
+    {
+    delete node;
+    return nullptr;
+    }
+  if(!FixShellCode(node, p_shellcode))
+    {
+    delete node;
+    return nullptr;
+    }
+  if(!FixJmpCode_Normal(node))
+    {
+    delete node;
+    return nullptr;
+    }
+
+  if(!HookIn(node))
+    {
+    delete node;
+    return nullptr;
+    }
+  return node;
+  }
+
+HookNode* Hook2Log(void*              hookmem,
+                   const char*        data_descibe,
+                   const char*        len_descibe,
+                   const bool         calltable_offset,
+                   const bool         docallend,
+                   const char*        head_msg,
+                   hook2log_out_func  log_out_func,
+                   void*              p_shellcode,
+                   const intptr_t     expandargc)
+  {
+  string code(MakeCode(data_descibe, len_descibe, head_msg, log_out_func));
+  if(code.empty())  return nullptr;
+
+  HookNode* node = MakeNode(hookmem, (void*)code.c_str(), calltable_offset);
+  if(node == nullptr) return nullptr;
+
+  node->shellcode.assign((const unsigned char*)code.c_str(), code.size());
+  node->shellcode.reserve(code.size() + hookshellcode_ctoff_prefix * 2);
+
+  node->routine = (void*)node->shellcode.c_str();
+
+  if(!MakeShellCode_CtOff(node, docallend, expandargc))
+    {
+    delete node;
+    return nullptr;
+    }
+  if(!FixShellCode(node, p_shellcode))
+    {
+    delete node;
+    return nullptr;
+    }
+  if(!FixJmpCode_CtOff(node, calltable_offset))
+    {
+    delete node;
+    return nullptr;
+    }
+
+  if(!HookIn(node))
+    {
+    delete node;
+    return nullptr;
+    }
+  return node;
   }

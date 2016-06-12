@@ -6,7 +6,7 @@
   - 由于链接器的【增量链接】可能会造成在使用Hook时出现一些莫名其妙的状况，请将之关闭！
   - Ring3卸载时钩子自清除，Ring0需要自行调用HookClear()
 
-  \version    10.1.1507.2108
+  \version    11.0.1606.1213
   \note       For All
 
   \author     triones
@@ -53,8 +53,21 @@ enum HookErrCode
   HookErr_UnHook,                   //!< 还原钩子失败
   HookErr_Clear,                    //!< 清除钩子链表失败
   HookErr_MovShellCode_Fail,        //!< 转移shellcode失败(一般是无效地址)
+  //以下是Hook to Log的错误信息
+  HookErr_Syntax,                   //!< 语法错误
+  HookErr_EmptyExpression,          //!< 空表达式
+  HookErr_InvaildModuleName,        //!< 无效模块名
+  HookErr_InvaildProcAddress,       //!< 无效模块函数名
+  HookErr_NoMatch,                  //!< 不匹配的()/[]
+  HookErr_MatchEmpty,               //!< 空的()/[]
+  HookErr_NeedLeftOp,               //!< 缺少左操作数
+  HookErr_NeedRightOp,              //!< 缺少右操作数
+  HookErr_InvailExpression,         //!< 非法表达式(非寄存器名或非模块名)
+  HookErr_NeedValue,                //!< 需要表达式值
+  HookErr_MoreExpression,           //!< 表达式未用操作符连接
+  HookErr_Shl,                      //!< 不匹配的<<
+  HookErr_Shr,                      //!< 不匹配的>>
   };
-
 
 /*!
   取得Hook执行错误码
@@ -167,7 +180,9 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
   \param  docodeend   true：覆盖代码后于回调执行，false：代码先行
   \param  p_shellcode 指定中转shellcode的存放位置\n
                       x86下可忽略，为兼容而设计。但设置也不影响使用\n
-                      x64下用于避免偏移超出而自动采用UEF。
+                      x64下用于避免偏移超出而自动采用UEF。\n
+                      x86请提供至少0x1C + hooksize大小的空间\n
+                      x64请提供至少0x3C + hooksize大小的空间
   \return             钩子结点指针，用于UnHook。\n
                       当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
 
@@ -217,7 +232,9 @@ HookNode* Hook(void*              hookmem,
   \param  docallend   指明覆盖函数后于回调执行，或是先于回调执行
   \param  p_shellcode 指定中转shellcode的存放位置\n
                       x86下可忽略，为兼容而设计。但设置也不影响使用\n
-                      x64下用于避免偏移超出而无法HOOK。
+                      x64下用于避免偏移超出而无法HOOK。\n
+                      x86请提供至少0x1D空间\n
+                      x64请提供至少0x5E空间
   \param  expandargc  覆盖函数可能存在参数过多的现象，以调整栈平衡
   \return             钩子结点指针，同样可以用UnHook卸载钩子。\n
                       当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
@@ -280,7 +297,7 @@ HookNode* Hook(void*              hookmem,
   \endcode
 
 */
-bool UnHook(HookNode* node,const bool errbreak);
+bool UnHook(HookNode* node, const bool errbreak);
 
 //! 还原全部钩子 
 /*!
@@ -299,3 +316,152 @@ bool HookClear();
   \return           当执行失败时，调用GetLastHookErr得到失败原因。
 */
 bool MoveHookCallTableShellCode(void* mem);
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// 以下是附加的Hook to Log
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+//! 输出回调格式
+typedef void(*hook2log_out_func)(const char* const head,
+                                 const char* const buf,
+                                 const size_t size);
+
+/*!
+  指定内存位置与信息输出描述，执行Hook2Log操作。
+  其它未说明的参数请参考Hook
+
+  \param  data_descibe  数据指针描述
+  \param  len_descibe   数据长度描述
+  \param  head_msg      此hook2log的数据说明，允许为nullptr
+  \param  log_out_func  数据输出回调，允许为nullptr，此时使用默认的输出
+  \return               钩子结点指针，用于UnHook。
+
+  \code
+    #include "hook.h"
+    void __stdcall logout(const char* const head, const char* const buf, const size_t size)
+      {
+      XLIB_TRY
+        {
+        if(head != nullptr)
+          {
+          xlog() << head;
+          }
+        xlog() << hex2show(buf, size);
+        }
+      XLIB_CATCH
+        {
+        xerr << xfunexpt;
+        }
+      }
+  #ifdef _WIN64
+    auto node = Hook2Log((void*)MessageBoxA, (size_t)8, "rdx", "10", true);
+  #else
+    auto node = Hook2Log((void*)MessageBoxA, (size_t)5, "[esp + 8]", "#[esp + 8]", true);
+  #endif
+    MessageBoxA(nullptr, "this is it", nullptr, MB_OK);
+  \endcode
+
+  \b 数据指针、数据长度，描述字符串由以下元素组合而成：
+
+  \section Blanks 空白
+  - 空白符由【空格】【制表符】【换行符】【回车符】组成
+  - 如无特别说明，【空白】允许出现在任意处
+  - 如无特别说明，【空白】在解析过程中被忽略
+
+  \section Reg 寄存器标识
+  - 寄存器标识可由以下字符串表示（无视大小写）
+    eax  ecx  edx  ebx  esp  ebp  esi  edi
+    eip  efg
+    ah   ch   dh   bh
+    al   cl   dl   bl
+    ax   cx   dx   bx   sp   bp   si   di
+    x64时，添加以下寄存器标识
+    rax  rcx  rdx  rbx  rsp  rbp  rsi  rdi
+    r8   r9   r10  r11  r12  r13  r14  r15
+    rip  rfg
+    r8d  r9d  r10d r11d r12d r13d r14d r15d
+    spl  bpl  sil  dil
+    r8b  r9b  r10b r11b r12b r13b r14b r15b
+    r8w  r9w  r10w r11w r12w r13w r14w r15w
+    x64时，没有x86的以下寄存器
+    eip  efg
+  - 寄存器取值一律视为无符号，如需要有符号取值，请使用(reg)[bwd]
+
+    \code
+      eax
+      eax + ecx
+      [rax]
+      al          //取al无符号数
+      (al)B       //==al ==(eax)B
+      (al)b       //取al有符号数 ==(eax)b
+    \endcode
+
+  \section ConstHex 常数
+  - 常数为1-8个十六进制字符组成，x64时为1-16个（无视大小写）
+    \code
+      123 + 11
+      AB * CD
+    \endcode
+
+  \section Operator 操作符
+  - 操作符有以下几种
+    + - * \ & | ^ % << >> # ##
+  - 操作符的意义与优先级参考C++
+  - 注意加入的# ##，为取长度值符，优先级高于其它操作符
+  - 注意*可能会溢出而丢失高位
+    \code
+      eax * 4
+      ecx & 1
+      eax >> 2
+      #eax        //以eax的值为ASCII指针，计算以'\0'为结尾的字符串长度
+      ##eax        //以eax的值为UNICODE指针，计算以'\0\0'结尾的字符串长度
+    \endcode
+
+  \section PickValue 取值符
+  - 取值符以【[】号起始，【]】号结束
+  - 取值符需要限定值时，允许在【]】后添加后缀【bwdBWD】分别表示byte word dword
+  - 默认取值x86为dword故不支持后缀【D】，x64为qword
+  - 当后缀小写时，取符号值，大写时，取无符号值
+
+  \section Parentheses 小括号
+  - 小括号以【(】号起始，【)】号结束
+  - 小括号需要限定值时，允许在【)】后添加后缀【bwdBWD】
+  - 小括号用于提高运算优先级，其它说明参考【取值符】
+
+  \section Mod 模块限定
+  - 当数据非空白、寄存器标识、常数、操作符、取值符或小括号时，视为模块限定
+  - 允许modname.offset/procname格式
+  - 当modename为空时，取当前进程模块
+  - 优先尝试以offset读取
+  - 允许offset/procname为空，即"."也是一个合法表示，代表进程主模块
+  - Ring0下，只支持为驱动名。"."表示第一个驱动模块，通常就是ntosknl.exe
+
+  \code
+    ntdll.1234     表示ntdll模块，偏移1234
+    ntdll.func     表示ntdll模块，func导出函数
+    test.exe       当test.exe是一个模块时，表示一个模块。否则视test为模块名，exe为procname
+  \endcode
+*/
+HookNode* Hook2Log(void*              hookmem,
+                   const size_t       hooksize,
+                   const char*        data_descibe,
+                   const char*        len_descibe,
+                   const bool         docodeend,
+                   const char*        head_msg = nullptr,
+                   hook2log_out_func  log_out_func = nullptr,
+                   void*              p_shellcode = nullptr);
+/*!
+  指定跳转表或call偏移位置，执行Hook2Log操作。
+  未作说明的参数请参考Hook、Hook2Log
+ */
+HookNode* Hook2Log(void*              hookmem,
+                   const char*        data_descibe,
+                   const char*        len_descibe,
+                   const bool         calltable_offset,
+                   const bool         docallend,
+                   const char*        head_msg = nullptr,
+                   hook2log_out_func  log_out_func = nullptr,
+                   void*              p_shellcode = nullptr,
+                   const intptr_t     expandargc = 0);
