@@ -3,7 +3,29 @@
 #include <stdarg.h>
 #include "ws_s.h"
 
-using namespace std;
+using std::string;
+using std::wstring;
+using std::basic_string;
+
+xmsg::xmsg()
+  {
+  ;
+  }
+
+xmsg::xmsg(const basic_string<char>& s)
+  {
+  assign(s);
+  }
+
+xmsg::xmsg(const basic_string<unsigned char>& s)
+  {
+  assign((const char*)s.c_str(), s.size());
+  }
+
+xmsg::xmsg(const basic_string<wchar_t>& s)
+  {
+  assign(ws2s(s));
+  }
 
 #pragma warning(push)
 #pragma warning(disable:4127)  //warning C4127: 条件表达式是常量

@@ -1,5 +1,7 @@
 ﻿#include "des.h"
 
+using std::string;
+
 //! 初始置换表
 static const unsigned char IP_TB[] =
   {
@@ -343,12 +345,12 @@ static void des(unsigned char *data_p,
   movram(tempbuf, data_p, 8);
   }
 
-line DesEncrypt(const void*     encrypt_data,
-                const size_t    encrypt_data_size,
-                const char*     encrypt_key)
+string DesEncrypt(const void*     encrypt_data,
+                  const size_t    encrypt_data_size,
+                  const char*     encrypt_key)
   {
-  line rets;
-  rets.append((const unsigned char*)encrypt_data, encrypt_data_size);
+  string rets;
+  rets.append((const char*)encrypt_data, encrypt_data_size);
 
   if(encrypt_data_size % 8 != 0)
     {
@@ -366,17 +368,17 @@ line DesEncrypt(const void*     encrypt_data,
   return rets;
   }
 
-line DesDecrypt(const void*     decrypt_data,
-                const size_t    decrypt_data_size,
-                const char*     decrypt_key)
+string DesDecrypt(const void*     decrypt_data,
+                  const size_t    decrypt_data_size,
+                  const char*     decrypt_key)
   {
   if(decrypt_data_size % 8 != 0)
     {
-    return line();
+    return string();
     }
 
-  line rets;
-  rets.append((const unsigned char*)decrypt_data, decrypt_data_size);
+  string rets;
+  rets.append((const char*)decrypt_data, decrypt_data_size);
 
   const unsigned char* key_p = (const unsigned char*)decrypt_key;
   unsigned char* data_p = (unsigned char*)rets.c_str();
@@ -389,7 +391,7 @@ line DesDecrypt(const void*     decrypt_data,
   const unsigned char ch = *rets.rbegin();
   if(ch > 0x7)  return rets;
 
-  if((size_t)ch > rets.size())  return line();
+  if((size_t)ch > rets.size())  return string();
 
   bool ispadding = true;
   for(auto it = rets.rbegin(); it != (rets.rbegin() + ch); ++it)

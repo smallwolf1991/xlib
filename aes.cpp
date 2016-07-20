@@ -1,5 +1,7 @@
 ﻿#include "aes.h"
 
+using std::string;
+
 AesKey::AesKey(const void* key,size_t len)
   {
   memset(_key,0,sizeof(_key));
@@ -257,14 +259,14 @@ static void KeyExpansion(const unsigned char* const key,
     }
   }
 
-line AesEncrypt(const void*     encrypt_data,
-                const size_t    encrypt_data_size,
-                const AesKey&   encrypt_key)
+string AesEncrypt(const void*     encrypt_data,
+                  const size_t    encrypt_data_size,
+                  const AesKey&   encrypt_key)
   {
   unsigned char data[bytes_row_size][bytes_columns_size];
   unsigned char expandkey[expand_key_size][bytes_row_size][bytes_columns_size];
   unsigned char okdata[bytes_row_size*bytes_columns_size];
-  line ret;
+  string ret;
   const unsigned char* lp_encrypt = (const unsigned char*)encrypt_data;
 
   KeyExpansion(encrypt_key._key,expandkey);
@@ -299,21 +301,21 @@ line AesEncrypt(const void*     encrypt_data,
         okdata[row + col * bytes_columns_size] = data[row][col];
         }
       }
-    ret.append(okdata,sizeof(okdata));
+    ret.append((const char*)okdata,sizeof(okdata));
     lp_encrypt += bytes_row_size * bytes_columns_size;
     }
 
   return ret;
   }
 
-line AesDecrypt(const void*     decrypt_data,
-                const size_t    decrypt_data_size,
-                const AesKey&   decrypt_key)
+string AesDecrypt(const void*     decrypt_data,
+                  const size_t    decrypt_data_size,
+                  const AesKey&   decrypt_key)
   {
   unsigned char data[bytes_row_size][bytes_columns_size];
   unsigned char expandkey[expand_key_size][bytes_row_size][bytes_columns_size];
   unsigned char okdata[bytes_row_size*bytes_columns_size];
-  line ret;
+  string ret;
   const unsigned char* lp_decrypt = (const unsigned char*)decrypt_data;
 
   KeyExpansion(decrypt_key._key,expandkey);
@@ -348,7 +350,7 @@ line AesDecrypt(const void*     decrypt_data,
         okdata[row + col * bytes_columns_size] = data[row][col];
         }
       }
-    ret.append(okdata,sizeof(okdata));
+    ret.append((const char*)okdata, sizeof(okdata));
     lp_decrypt += bytes_row_size * bytes_columns_size;
     }
 

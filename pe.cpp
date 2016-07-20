@@ -51,6 +51,7 @@ const IMAGE_DOS_HEADER* pe::GetDosHead() const
 const IMAGE_NT_HEADERS* pe::GetPeHead() const
   {
   const IMAGE_DOS_HEADER* doshead = GetDosHead();
+  if(!IsPE()) return nullptr;
   return (IMAGE_NT_HEADERS*)
     ((size_t)doshead + (size_t)doshead->e_lfanew);
   }
@@ -58,6 +59,7 @@ const IMAGE_NT_HEADERS* pe::GetPeHead() const
 void* pe::EntryPoint() const
   {
   const IMAGE_NT_HEADERS* pehead = GetPeHead();
+  if(pehead == nullptr) return nullptr;
   return (void*)(pehead->OptionalHeader.AddressOfEntryPoint + 
     (size_t)GetDosHead());
   }
@@ -65,6 +67,7 @@ void* pe::EntryPoint() const
 xblk pe::GetImage() const
   {
   const IMAGE_NT_HEADERS* pehead = GetPeHead();
+  if(pehead == nullptr) return xblk(nullptr, nullptr);
   return xblk(
     (void*)GetDosHead(),
     pehead->OptionalHeader.SizeOfImage);
@@ -73,6 +76,7 @@ xblk pe::GetImage() const
 xblk pe::GetCode() const
   {
   const IMAGE_NT_HEADERS* pehead = GetPeHead();
+  if(pehead == nullptr) return xblk(nullptr, nullptr);
   return xblk(
     (void*)(pehead->OptionalHeader.BaseOfCode + (size_t)GetDosHead()),
     pehead->OptionalHeader.SizeOfCode);

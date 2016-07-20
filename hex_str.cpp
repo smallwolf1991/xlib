@@ -1,9 +1,11 @@
 ﻿#include "hex_str.h"
 
+#include "xmsg.h"
 #include "ws_s.h"
 #include "ws_utf8.h"
 
-using namespace std;
+using std::string;
+using std::basic_string;
 
 //! 十六进制转换，小写索引
 static const char* const gk_NumFmt_Low  = "0123456789abcdef";
@@ -41,7 +43,7 @@ size_t hex2str(char*           dest,
   return ++count;
   }
 
-std::string hex2str(const hexstring& hexs, const bool isup)
+string hex2str(const basic_string<unsigned char>& hexs, const bool isup)
   {
   string asc;
   const char* fmt = isup ? gk_NumFmt_Up : gk_NumFmt_Low;
@@ -56,10 +58,10 @@ std::string hex2str(const hexstring& hexs, const bool isup)
   return asc;
   }
 
-std::string hex2str(const string& hexs, const bool isup)
+string hex2str(const basic_string<char>& hexs, const bool isup)
   {
   return hex2str(
-    hexstring((const unsigned char*)hexs.c_str(), hexs.size()),
+    basic_string<unsigned char>((const unsigned char*)hexs.c_str(), hexs.size()),
     isup);
   }
 
@@ -121,12 +123,12 @@ size_t str2hex(const string&       strs,
   return values;
   }
 
-hexstring str2hexs(const string&       strs,
-                   size_t*             lpreadlen,
-                   const bool          errexit,
-                   const bool          errbreak)
+string str2hexs(const string&       strs,
+                size_t*             lpreadlen,
+                const bool          errexit,
+                const bool          errbreak)
   {
-  hexstring rets;
+  string rets;
 
   size_t readlen = 0;
   if(lpreadlen == nullptr) lpreadlen = &readlen;
@@ -471,11 +473,11 @@ static void hex2show_ascii(xmsg&                  msg,
   if(lp > fix_len)  usechar = lp - fix_len;
   }
 
-xmsg hex2show(const void*           data,
-              intptr_t              size,
-              const size_t          prews,
-              const Hex2showCode    code,
-              const bool            isup)
+string hex2show(const void*           data,
+                intptr_t              size,
+                const size_t          prews,
+                const Hex2showCode    code,
+                const bool            isup)
   {
   xmsg msg;
   const char* fmt = isup ? gk_NumFmt_Up : gk_NumFmt_Low;

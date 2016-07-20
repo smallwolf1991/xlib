@@ -2,7 +2,7 @@
   \file  md5.h
   \brief md5.h定义了md5算法
 
-  \version    1.1.1303.2011
+  \version    1.2.1607.2015
   \note       For All
 
   \author     triones
@@ -11,9 +11,10 @@
 #pragma once
 
 #include "xlib_base.h"
+#include <string>
 
-typedef BYTE    MD5_BYTE;
-typedef DWORD   MD5_DWORD;
+typedef unsigned char    MD5_BYTE;
+typedef unsigned long    MD5_DWORD;
 
 #pragma warning(push)
 #pragma warning(disable:4201)   //warning C4201: 使用了非标准扩展 : 无名称的结构/联合
@@ -27,6 +28,7 @@ class MD5_VALUE
               const MD5_DWORD c,
               const MD5_DWORD d);
     MD5_VALUE(const void* data);
+    operator std::string();
   public:
     union
       {
@@ -52,7 +54,7 @@ class MD5_VALUE
     string aa;
     while(cin>>aa)
       {
-      MD5_VALUE v = md5((unsigned char*)aa.c_str(),aa.size());
+      auto v = md5((unsigned char*)aa.c_str(),aa.size());
       cout << hex2str((unsigned char*)&v, sizeof(v)) << endl;
       }
     //MD5 ("") = d41d8cd98f00b204e9800998ecf8427e
@@ -65,3 +67,9 @@ class MD5_VALUE
   \endcode
 */
 MD5_VALUE md5(const void* data, const size_t size);
+
+//////////////////////////////////////////////////////////////////////////
+template<typename T> MD5_VALUE md5(const std::basic_string<T>& s)
+  {
+  return md5(s.c_str(), s.size() * sizeof(T));
+  }

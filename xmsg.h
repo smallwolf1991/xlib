@@ -2,7 +2,7 @@
   \file  xmsg.h
   \brief xmsg.h定义了信息组织的基本类，类似标准库的ostreamstring
 
-  \version    3.1.1404.0911
+  \version    3.2.1607.2015
   \note       For All
 
   \author     triones
@@ -20,6 +20,11 @@
 
 class xmsg : public std::string
   {
+  public:
+    xmsg();
+    xmsg(const std::basic_string<char>& s);
+    xmsg(const std::basic_string<unsigned char>& s);
+    xmsg(const std::basic_string<wchar_t>& s);
   public:
     xmsg& prt(const char* const fmt,...);       //! 指定格式输出
     xmsg& operator<<(const char& v);            //! 输出 字符

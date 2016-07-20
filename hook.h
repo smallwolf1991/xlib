@@ -175,7 +175,7 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
     - 14以上：采用jmp qword ptr [XXX]
 
   \param  hookmem     指定hook内存的位置
-  \param  hooksize    hook长度(1~0xFF)
+  \param  hooksize    hook长度[1 ~ 30]
   \param  routine     指定的回调函数(声明请参考HookRoutine)
   \param  docodeend   true：覆盖代码后于回调执行，false：代码先行
   \param  p_shellcode 指定中转shellcode的存放位置\n
@@ -275,7 +275,6 @@ HookNode* Hook(void*              hookmem,
 //! UnHook函数
 /*!
   指定HookNode结点指针，执行UnHook操作。\n
-  注意：UnHook函数直接返回Hook错误码，不影响GetLastHookErr\n
   因为卸载钩子会有一些异常情况，强制卸载极可能会造成崩溃，\n
   所以可以指定错误停止
 
@@ -302,10 +301,9 @@ bool UnHook(HookNode* node, const bool errbreak);
 //! 还原全部钩子 
 /*!
   注意HookClear执行的是强制卸载操作，会尝试卸载链表中的每个钩子\n
-  注意：HookClear函数也直接返回Hook错误码，不影响GetLastHookErr\n
   一般应用于动态库卸载的清理流程中。
 
-  \return   当执行失败时，调用GetLastHookErr得到失败原因。返回的是最后一个卸载错误码
+  \return   当执行失败时，调用GetLastHookErr得到失败原因。
 */
 bool HookClear();
 
@@ -355,11 +353,11 @@ typedef void(*hook2log_out_func)(const char* const head,
         xerr << xfunexpt;
         }
       }
-  #ifdef _WIN64
+    #ifdef _WIN64
     auto node = Hook2Log((void*)MessageBoxA, (size_t)8, "rdx", "10", true);
-  #else
+    #else
     auto node = Hook2Log((void*)MessageBoxA, (size_t)5, "[esp + 8]", "#[esp + 8]", true);
-  #endif
+    #endif
     MessageBoxA(nullptr, "this is it", nullptr, MB_OK);
   \endcode
 

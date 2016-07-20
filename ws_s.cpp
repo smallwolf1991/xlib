@@ -1,7 +1,8 @@
 ﻿#include "ws_s.h"
 #include "xlib_nt.h"
 
-using namespace std;
+using std::string;
+using std::wstring;
 
 size_t ws2s(char* s,const size_t max_s,const wchar_t* ws,const size_t ws_len)
   {

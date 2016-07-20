@@ -96,3 +96,4 @@ size_t utf82ws(wchar_t*       ws,
   \return         转换后的对应UNICODE串对象
 */
 std::wstring utf82ws(const xutf8& utf8);
+std::wstring utf82ws(const std::string& utf8);

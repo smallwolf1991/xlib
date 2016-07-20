@@ -1,6 +1,7 @@
 ﻿#include "ws_utf8.h"
 
-using namespace std;
+using std::string;
+using std::wstring;
 
 static const size_t gk_utf8_max_byte = 6;   //utf8最大占用字节
 
@@ -227,4 +228,9 @@ wstring utf82ws(const xutf8& utf8)
     }
 
   return ws;
+  }
+
+wstring utf82ws(const string& utf8)
+  {
+  return utf82ws(xutf8((const unsigned char*)utf8.c_str(), utf8.size()));
   }

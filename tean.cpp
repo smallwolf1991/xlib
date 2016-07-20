@@ -1,6 +1,9 @@
 ﻿#include "tean.h"
 
+using std::string;
+
 #include "xrand.h"
+#include "swap.h"
 
 TEAN_DATA::TEAN_DATA()
 :A(0),B(0)
@@ -17,6 +20,10 @@ TEAN_DATA::TEAN_DATA(const void* datas)
   memcpy(Data,datas,sizeof(Data));
   }
 
+TEAN_DATA::operator string()
+  {
+  return string((const char*)Data, sizeof(Data));
+  }
 
 
 TEAN_KEY::TEAN_KEY()
@@ -102,13 +109,13 @@ static TEAN_DATA TeaEncipherRound(TEAN_DATA&        data,
   return cipher;
   }
 
-netline TeaEncrypt(const void*        encrypt_data,
-                   const size_t       encrypt_data_size,
-                   const TEAN_KEY&    encrypt_key,
-                   const TEAN_UL      delta,
-                   const size_t       xtea_round)
+string TeaEncrypt(const void*        encrypt_data,
+                  const size_t       encrypt_data_size,
+                  const TEAN_KEY&    encrypt_key,
+                  const TEAN_UL      delta,
+                  const size_t       xtea_round)
   {
-  netline rets;
+  string rets;
 
   if(encrypt_data == nullptr || (intptr_t)encrypt_data_size <= 0)
      return rets;
@@ -174,15 +181,15 @@ netline TeaEncrypt(const void*        encrypt_data,
         }
       }
     const TEAN_DATA TD(TeaEncipherRound(data, pre_data, key, cipher, delta, xtea_round));
-    rets.append(TD.Data,sizeof(TD.Data));
+    rets.append((const char*)TD.Data,sizeof(TD.Data));
     }
 
   return rets;
   }
 
-netline TeanEncrypt(const void*       encrypt_data,
-                    const size_t      encrypt_data_size,
-                    const TEAN_KEY&   encrypt_key)
+string TeanEncrypt(const void*       encrypt_data,
+                   const size_t      encrypt_data_size,
+                   const TEAN_KEY&   encrypt_key)
   {
   return TeaEncrypt(encrypt_data, encrypt_data_size, encrypt_key, gk_tean_delta, gk_tean_round);
   }
@@ -245,13 +252,13 @@ static TEAN_DATA TeaDecipherRound(TEAN_DATA&        cipher,
   return data;
   }
 
-netline TeaDecrypt(const void*        decrypt_data,
-                   const size_t       decrypt_data_size,
-                   const TEAN_KEY&    decrypt_key,
-                   const TEAN_UL      delta,
-                   const size_t       xtea_round)
+string TeaDecrypt(const void*        decrypt_data,
+                  const size_t       decrypt_data_size,
+                  const TEAN_KEY&    decrypt_key,
+                  const TEAN_UL      delta,
+                  const size_t       xtea_round)
   {
-  netline rets;
+  string rets;
 
   //解密串必须>=16并且为8倍数
   if(decrypt_data == nullptr||
@@ -274,7 +281,7 @@ netline TeaDecrypt(const void*        decrypt_data,
     {
     TEAN_DATA cipher(&lp_decrypt[i*gk_tea_data_size]);
     const TEAN_DATA TD(TeaDecipherRound(cipher, pre_cipher, key, pre_data, delta, xtea_round));
-    rets.append(TD.Data,sizeof(TD.Data));
+    rets.append((const char*)TD.Data,sizeof(TD.Data));
     }
 
   //需要验证结尾0，并去除结尾7 byte 0
@@ -310,24 +317,24 @@ netline TeaDecrypt(const void*        decrypt_data,
   return rets;
   }
 
-netline TeanDecrypt(const void*       decrypt_data,
-                    const size_t      decrypt_data_size,
-                    const TEAN_KEY&   decrypt_key)
+string TeanDecrypt(const void*       decrypt_data,
+                   const size_t      decrypt_data_size,
+                   const TEAN_KEY&   decrypt_key)
   {
   return TeaDecrypt(decrypt_data, decrypt_data_size, decrypt_key, gk_tean_delta, gk_tean_round);
   }
 
 
-netline XTeanEncrypt(const void*        encrypt_data,
-                     const size_t       encrypt_data_size,
-                     const TEAN_KEY&    encrypt_key)
+string XTeanEncrypt(const void*        encrypt_data,
+                    const size_t       encrypt_data_size,
+                    const TEAN_KEY&    encrypt_key)
   {
   return TeaEncrypt(encrypt_data, encrypt_data_size, encrypt_key, gk_xtean_delta, gk_xtean_round);
   }
 
-netline XTeanDecrypt(const void*        decrypt_data,
-                     const size_t       decrypt_data_size,
-                     const TEAN_KEY&    decrypt_key)
+string XTeanDecrypt(const void*        decrypt_data,
+                    const size_t       decrypt_data_size,
+                    const TEAN_KEY&    decrypt_key)
   {
   return TeaDecrypt(decrypt_data, decrypt_data_size, decrypt_key, gk_xtean_delta, gk_xtean_round);
   }

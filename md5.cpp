@@ -2,6 +2,8 @@
 
 #include "swap.h"
 
+using std::string;
+
 MD5_VALUE::MD5_VALUE()
   {
   memset(Data,0,sizeof(Data));
@@ -19,6 +21,11 @@ MD5_VALUE::MD5_VALUE(const MD5_DWORD a,
 MD5_VALUE::MD5_VALUE(const void* data)
   {
   memcpy(Data,data,sizeof(Data));
+  }
+
+MD5_VALUE::operator string()
+  {
+  return string((const char*)Data, sizeof(Data));
   }
 
 

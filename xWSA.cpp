@@ -1,10 +1,11 @@
 ﻿#include "xWSA.h"
 
-#include "swap.h"
-
 #ifndef FOR_RING0
 
+#include "xmsg.h"
 #include <ws2tcpip.h>
+
+using std::string;
 
 class xWSA_base
   {
@@ -92,7 +93,7 @@ sockaddr_in  AddrInfo(const unsigned long host,const unsigned short ports)
   return addrto;
   }
 
-xmsg IpString(const sockaddr_in& addr)
+string IpString(const sockaddr_in& addr)
   {
   return  xmsg()
     << (int)addr.sin_addr.s_net   << '.'

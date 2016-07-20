@@ -49,17 +49,17 @@ unsigned __int32 crc32(const void* buf,const size_t size);
 */
 unsigned __int64 crc64(const void* buf,const size_t size);
 
-//! crc16模版
+//////////////////////////////////////////////////////////////////////////
 template<typename T> unsigned __int16 crc16(const std::basic_string<T>& s)
   {
   return crc16(s.c_str(), s.size() * sizeof(T));
   }
-//! crc32模版
+
 template<typename T> unsigned __int32 crc32(const std::basic_string<T>& s)
   {
   return crc32(s.c_str(), s.size() * sizeof(T));
   }
-//! crc64模版
+
 template<typename T> unsigned __int64 crc64(const std::basic_string<T>& s)
   {
   return crc64(s.c_str(), s.size() * sizeof(T));

@@ -11,9 +11,7 @@
 
 #pragma once
 
-#include "xmsg.h"
-
-typedef std::basic_string<unsigned char> hexstring;
+#include <string>
 
 //! 十六进制值的结构体
 /*!
@@ -91,8 +89,8 @@ size_t  hex2str(char*           dest,
       }
   \endcode
   */
-std::string hex2str(const hexstring& hexs, const bool isup = false);
-std::string hex2str(const std::string& hexs, const bool isup = false);
+std::string hex2str(const std::basic_string<unsigned char>& hexs, const bool isup = false);
+std::string hex2str(const std::basic_string<char>& hexs, const bool isup = false);
 
 //! 指定十六进制ASCII串转换为HEX值
 /*!
@@ -139,10 +137,10 @@ size_t str2hex(const std::string&  strs,
   \return           成功转换则为十六进制ASCII串对应的HEX值。\n
                     判定转换失败，应该通过lpreadlen的返回结果判定。
 */
-hexstring str2hexs(const std::string&  strs,
-                   size_t*             lpreadlen = nullptr,
-                   const bool          errexit = false,
-                   const bool          errbreak = false);
+std::string str2hexs(const std::string&  strs,
+                     size_t*             lpreadlen = nullptr,
+                     const bool          errexit = false,
+                     const bool          errbreak = false);
 
 //! 指定ASCII串，分析转义字符
 /*!
@@ -180,18 +178,18 @@ enum Hex2showCode
     //0012FF64┃68 63 66 00|           |           |           ┃hcf.
   \endcode
 */
-xmsg hex2show(const void*           data,
-              intptr_t              size,
-              const size_t          prews = 0,
-              const Hex2showCode    code = HC_ASCII,
-              const bool            isup = true);
+std::string hex2show(const void*           data,
+                     intptr_t              size,
+                     const size_t          prews = 0,
+                     const Hex2showCode    code = HC_ASCII,
+                     const bool            isup = true);
 
 //! 模版　指定hex串，格式化显示
 template<typename T>
-xmsg hex2show(const std::basic_string<T>& s,
-              const size_t                prews = 0,
-              const Hex2showCode          code = HC_ASCII,
-              const bool                  isup = true)
+std::string hex2show(const std::basic_string<T>& s,
+                     const size_t                prews = 0,
+                     const Hex2showCode          code = HC_ASCII,
+                     const bool                  isup = true)
   {
   return hex2show(s.c_str(), s.size() * sizeof(T), prews, code, isup);
   }

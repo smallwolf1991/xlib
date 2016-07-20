@@ -39,7 +39,7 @@
 #include "xlib_nt.h"            //+20140107   open          base/nt
 
 #include "swap.h"               //-20140107   locked        memory/swap
-#include "xrand.h"              //+20140725   locked        algorithm/xrand
+#include "xrand.h"              //+20160719   locked        algorithm/xrand
 #include "crc.h"                //+20140725   locked        algorithm/crc
 #include "xmutex.h"             //+20130301   locked        system_object/mutex
 #include "xevent.h"             //+20130301   locked        system_object/event
@@ -50,7 +50,7 @@
 #include "ws_utf8.h"            //+20140507   locked        string/ws&utf8
 #include "xblk.h"               //+20131210   locked        memory/xblk
 //              swap.h
-#include "xmsg.h"               //+20140409   locked        string/xmsg
+#include "xmsg.h"               //+20160720   locked        string/xmsg
 //          ws_utf8.h
 //              ws_s.h
 #include "xlog.h"               //+20131210   locked        string/xlog
@@ -61,21 +61,18 @@
 //              ws_utf8.h
 #include "xline.h"              //-20150122   locked        container/xline
 //          swap.h
-#include "md5.h"                //+20140121   locked        algorithm/md5
+#include "md5.h"                //+20160719   locked        algorithm/md5
 //              swap.h
-//              hex_str.h
-#include "tean.h"               //+20160311   locked        algorithm/tean
-//          xline.h
+#include "tean.h"               //+20160720   locked        algorithm/tean
 //              xrand.h
-#include "aes.h"                //+20131210   locked        algorithm/aes
-//          xline.h
+#include "aes.h"                //+20160719   locked        algorithm/aes
 #include "syssnap.h"            //+20140219   to add        system_object/syssnap
 //          xline.h
 //              xlib_nt.h
-#include "pe.h"                 //+20140508   to add        file/pe
+#include "pe.h"                 //+20160720   to add        file/pe
 //          xblk.h
 //              ws_s.h
-//              sysinfo.h
+//              syssnap.h
 #include "hook.h"               //+20160612   check         memory/hook
 //              xlib_nt.h
 //              xblk.h
@@ -87,9 +84,8 @@
 #include "caller.h"             //+20150721   locked        memory/caller
 //              hook.h
 //              xevent.h
-#include "xWSA.h"               //+20121113   locked        sock/wsa
-//          xmsg.h
-//              swap.h
+#include "xWSA.h"               //+20160720   locked        sock/wsa
+//              xmsg.h
 #include "xSock.h"              //+20121113   close         sock/xsock
 //          xWSA.h
 //          xline.h
@@ -107,4 +103,4 @@
 //              xlog.h
 //              hex_str.h
 //              ws_s.h
-#include "des.h"                //+20150428   check         algorithm/des
+#include "des.h"                //+20160719   close         algorithm/des

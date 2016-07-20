@@ -2,7 +2,7 @@
   \file  xWSA.h
   \brief xWSA.h定义了使用网络的基本封装
 
-  \version    2.0.1211.1310
+  \version    2.1.1607.2013
   \note       Only For Ring3
 
   \author     triones
@@ -15,7 +15,7 @@
 
 #include <winsock2.h>
 #pragma comment (lib,"ws2_32.lib")
-#include "xmsg.h"
+#include <string>
 
 //! 用于保证sock环境初始化，注意构造失败抛出异常
 class xWSA
@@ -52,6 +52,6 @@ sockaddr_in  AddrInfo(const wchar_t* host,const wchar_t* ports);
 sockaddr_in  AddrInfo(const unsigned long host,const unsigned short ports);
 
 //! 由指定sockaddr_in结构，输出“#.#.#.#:#”串
-xmsg IpString(const sockaddr_in& addr);
+std::string IpString(const sockaddr_in& addr);
 
 #endif  //#ifndef FOR_RING0
