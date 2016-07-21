@@ -2,7 +2,7 @@
   \file  pe.h
   \brief pe.h定义了解析PE文件的类
 
-  \version    1.2.1607.2011
+  \version    1.3.1607.2114
   \note       For All
 
   \author     triones

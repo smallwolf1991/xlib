@@ -50,36 +50,64 @@ const IMAGE_DOS_HEADER* pe::GetDosHead() const
 
 const IMAGE_NT_HEADERS* pe::GetPeHead() const
   {
-  const IMAGE_DOS_HEADER* doshead = GetDosHead();
-  if(!IsPE()) return nullptr;
-  return (IMAGE_NT_HEADERS*)
-    ((size_t)doshead + (size_t)doshead->e_lfanew);
+  XLIB_TRY
+    {
+    const IMAGE_DOS_HEADER* doshead = GetDosHead();
+    if(!IsPE()) return nullptr;
+    return (IMAGE_NT_HEADERS*)
+      ((size_t)doshead + (size_t)doshead->e_lfanew);
+    }
+  XLIB_CATCH
+    {
+    return nullptr;
+    }
   }
 
 void* pe::EntryPoint() const
   {
-  const IMAGE_NT_HEADERS* pehead = GetPeHead();
-  if(pehead == nullptr) return nullptr;
-  return (void*)(pehead->OptionalHeader.AddressOfEntryPoint + 
-    (size_t)GetDosHead());
+  XLIB_TRY
+    {
+    const IMAGE_NT_HEADERS* pehead = GetPeHead();
+    if(pehead == nullptr) return nullptr;
+    return (void*)(pehead->OptionalHeader.AddressOfEntryPoint + 
+      (size_t)GetDosHead());
+    }
+  XLIB_CATCH
+    {
+    return nullptr;
+    }
   }
 
 xblk pe::GetImage() const
   {
-  const IMAGE_NT_HEADERS* pehead = GetPeHead();
-  if(pehead == nullptr) return xblk(nullptr, nullptr);
-  return xblk(
-    (void*)GetDosHead(),
-    pehead->OptionalHeader.SizeOfImage);
+  XLIB_TRY
+    {
+    const IMAGE_NT_HEADERS* pehead = GetPeHead();
+    if(pehead == nullptr) return xblk(nullptr, nullptr);
+    return xblk(
+      (void*)GetDosHead(),
+      pehead->OptionalHeader.SizeOfImage);
+    }
+  XLIB_CATCH
+    {
+    return xblk(nullptr, nullptr);
+    }
   }
 
 xblk pe::GetCode() const
   {
-  const IMAGE_NT_HEADERS* pehead = GetPeHead();
-  if(pehead == nullptr) return xblk(nullptr, nullptr);
-  return xblk(
-    (void*)(pehead->OptionalHeader.BaseOfCode + (size_t)GetDosHead()),
-    pehead->OptionalHeader.SizeOfCode);
+  XLIB_TRY
+    {
+    const IMAGE_NT_HEADERS* pehead = GetPeHead();
+    if(pehead == nullptr) return xblk(nullptr, nullptr);
+    return xblk(
+      (void*)(pehead->OptionalHeader.BaseOfCode + (size_t)GetDosHead()),
+      pehead->OptionalHeader.SizeOfCode);
+    }
+  XLIB_CATCH
+    {
+    return xblk(nullptr, nullptr);
+    }
   }
 
 HMODULE pe::Module() const
@@ -89,8 +117,15 @@ HMODULE pe::Module() const
 
 bool pe::IsPE() const
   {
-  const IMAGE_DOS_HEADER* doshead = GetDosHead();
-  if(doshead->e_magic != 'ZM')  return false;
-  const IMAGE_NT_HEADERS* pehead = GetPeHead();
-  return pehead->Signature == 'EP';
+  XLIB_TRY
+    {
+    const IMAGE_DOS_HEADER* doshead = GetDosHead();
+    if(doshead->e_magic != 'ZM')  return false;
+    const IMAGE_NT_HEADERS* pehead = GetPeHead();
+    return pehead->Signature == 'EP';
+    }
+  XLIB_CATCH
+    {
+    return false;
+    }
   }
