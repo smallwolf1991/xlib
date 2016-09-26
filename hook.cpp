@@ -1035,12 +1035,15 @@ bool FixShellCode(HookNode* node, void* p_shellcode)
     //前缀的添加完全是为了x64。x86下不使用但不影响
     line& scs = node->shellcode;
 
-    //当一般Hook时，off == 0。Hook2Log时，off != 0
-    const size_t off = (const unsigned char*)node->lpshellcode - scs.c_str();
-
-    const unsigned char head[1 + 1 + sizeof(void*)] =
-      { (unsigned char)'\xEB', (unsigned char)sizeof(void*), 0 };
-    scs.insert(off, head, sizeof(head));
+    size_t off = 0;
+    if(scs.c_str() != node->routine)  //如果不是Hook2Log的情况，lpshellcode需要修正
+      {
+      node->lpshellcode = (void*)scs.c_str();
+      }
+    else
+      {
+      off = (const unsigned char*)node->lpshellcode - scs.c_str();
+      }
 
 #ifndef FOR_RING0
     LPVOID Mem = (LPVOID)scs.c_str();
@@ -1091,7 +1094,11 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
     {
     line& scs = node->shellcode;
 
-    node->lpshellcode = (void*)(scs.c_str() + scs.size());
+    node->lpshellcode = (void*)(scs.c_str() + scs.size());    //对Hook2Log有效，对Hook无意义
+
+    const unsigned char head[1 + 1 + sizeof(void*)] =
+      { (unsigned char)'\xEB', (unsigned char)sizeof(void*), 0 };
+    scs.append(head, sizeof(head));
 
     if(!docodeend)    //代码前行需要先写原始代码
       {
@@ -1142,6 +1149,10 @@ bool MakeShellCode_CtOff(HookNode* node, const bool docallend, const intptr_t ex
     line& scs = node->shellcode;
 
     node->lpshellcode = (void*)(scs.c_str() + scs.size());
+
+    const unsigned char head[1 + 1 + sizeof(void*)] =
+      { (unsigned char)'\xEB', (unsigned char)sizeof(void*), 0 };
+    scs.append(head, sizeof(head));
 
     static const intptr_t gk_hook_default_argc = 0x8;     //默认参数8个
     intptr_t hookargc = gk_hook_default_argc + expandargc;
