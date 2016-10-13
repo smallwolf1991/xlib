@@ -53,7 +53,7 @@ const IMAGE_NT_HEADERS* pe::GetPeHead() const
   XLIB_TRY
     {
     const IMAGE_DOS_HEADER* doshead = GetDosHead();
-    if(!IsPE()) return nullptr;
+    if(doshead == nullptr) return nullptr;
     return (IMAGE_NT_HEADERS*)
       ((size_t)doshead + (size_t)doshead->e_lfanew);
     }
