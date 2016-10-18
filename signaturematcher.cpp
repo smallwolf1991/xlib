@@ -2519,7 +2519,9 @@ namespace signaturematcher
           pe thispe(hmod);
           if(thispe.IsPE())
             {
-            tmpblk = (flag == '@') ? thispe.GetImage() : thispe.GetCode();
+            auto i = thispe.GetImage();
+            auto c = thispe.GetCode();
+            tmpblk = (flag == '@') ? i : xblk(i.start(), c.end());
             }
           }
 #else
@@ -2538,7 +2540,9 @@ namespace signaturematcher
               pe thispe((HMODULE)st.ImageBaseAddress);
               if(thispe.IsPE())
                 {
-                tmpblk = thispe.GetCode();
+                auto i = thispe.GetImage();
+                auto c = thispe.GetCode();
+                tmpblk = xblk(i.start(), c.end());
                 }
               }
             }

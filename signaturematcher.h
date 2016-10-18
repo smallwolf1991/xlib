@@ -4,7 +4,7 @@
 
   - signaturematcher处理的全部为C格式ASCII字符串，要求以'\0'结尾
 
-  \version    4.6.1604.0610
+  \version    5.0.1610.1813
   \note       For All
 
   \author     triones
