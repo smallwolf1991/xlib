@@ -7,12 +7,12 @@
   \author   triones
   \date     2011-4-8
 */
+#ifndef _XLIB_STRUCT_RING0_H_
+#define _XLIB_STRUCT_RING0_H_
 
-#pragma once
+#if defined(_WIN32) && defined(FOR_RING0)
 
 #include "xlib_def.h"
-
-#ifdef  FOR_RING0
 
 //20120906 1115
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
@@ -107,4 +107,6 @@ typedef struct _IMAGE_NT_HEADERS {
   IMAGE_OPTIONAL_HEADER OptionalHeader;
   } IMAGE_NT_HEADERS;
 
-#endif  //#ifdef  FOR_RING0
+#endif  // _WIN32 FOR_RING0
+
+#endif  // _XLIB_STRUCT_RING0_H_

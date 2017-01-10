@@ -2,14 +2,14 @@
   \file  xlog.h
   \brief xlog.h定义了日志组织与输出相关的类
 
-  \version    3.0.1209.2511
+  \version    4.0.1611.1511
   \note       For All
 
   \author     triones
   \date       2011-07-22
 */
-
-#pragma once
+#ifndef _XLIB_XLOG_H_
+#define _XLIB_XLOG_H_
 
 #include "xmsg.h"
 
@@ -76,7 +76,7 @@ xmsg& xlogout(xmsg& v);
 
 /*!
   xlog_static_lvl宏用于控制静态编译结果。\n
-  \n 注意 宏的作用是局部的，不同CPP可以设置不同的静态控制等级。\n
+  \b 注意 宏的作用是局部的，不同CPP可以设置不同的静态控制等级。\n
   由于需要在包含之前定义宏，故无法使用枚举值，请参考枚举值自定数值。\n
   如果需要设置全局静态控制等级，需要在“预处理器选项”中设置“xlog_static_lvl=[1..7]”，如此控制全局静态编译结果。
 
@@ -86,7 +86,7 @@ xmsg& xlogout(xmsg& v);
   \endcode
 */
 #ifndef xlog_static_lvl
-#  define xlog_static_lvl xlog::lvl_on
+#define xlog_static_lvl xlog::lvl_on
 #endif
 
 /*!
@@ -98,7 +98,9 @@ xmsg& xlogout(xmsg& v);
     xfail << "xfail"; //除非xlog_static_lvl==0，否则此句输出。
   \endcode
 */
-#pragma warning(disable:4127)  //C4127: 条件表达式是常量
+#ifdef _WIN32
+#   pragma warning(disable:4127)  //C4127: 条件表达式是常量
+#endif  // _WIN32
 #define xlog_do(v) if((v) <= xlog_static_lvl) xlog()
 
 #define xtrace  xlog_do(xlog::lvl_trace)
@@ -149,14 +151,14 @@ xmsg& xlogout(xmsg& v);
     xlog_throw << "丢弃物品"; //注意使用了不同序号，故xlog_pickup输出将被关闭。
   \endcode
 */
-#define xtlog_do(v,n) if(((size_t)1 << n) & xlog::type()) xlog()
+#define xtlog_do(v, n) if(((size_t)1 << n) & xlog::type()) xlog()
 
-#define xttrace(n)  xtlog_do(xlog::lvl_trace,n)
-#define xtdbg(n)    xtlog_do(xlog::lvl_debug,n)
-#define xtinfo(n)   xtlog_do(xlog::lvl_info,n)
-#define xtwarn(n)   xtlog_do(xlog::lvl_warn,n)
-#define xterr(n)    xtlog_do(xlog::lvl_error,n)
-#define xtfail(n)   xtlog_do(xlog::lvl_fatal,n)
+#define xttrace(n)  xtlog_do(xlog::lvl_trace, n)
+#define xtdbg(n)    xtlog_do(xlog::lvl_debug, n)
+#define xtinfo(n)   xtlog_do(xlog::lvl_info, n)
+#define xtwarn(n)   xtlog_do(xlog::lvl_warn, n)
+#define xterr(n)    xtlog_do(xlog::lvl_error, n)
+#define xtfail(n)   xtlog_do(xlog::lvl_fatal, n)
 
 /*!
   便捷宏，用于便捷插入函数名及行号
@@ -174,3 +176,5 @@ xmsg& xlogout(xmsg& v);
   \endcode
 */
 #define xfunexpt " [" << __FUNCTION__ << "]: exception"
+
+#endif  // _XLIB_XLOG_H_

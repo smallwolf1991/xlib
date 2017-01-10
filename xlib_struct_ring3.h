@@ -7,11 +7,12 @@
   \author   triones
   \date     2011-4-8
 */
-#pragma once
+#ifndef _XLIB_STRUCT_RING3_H_
+#define _XLIB_STRUCT_RING3_H_
+
+#if defined(_WIN32) && !defined(FOR_RING0)
 
 #include "xlib_def.h"
-
-#ifndef  FOR_RING0
 
 //20120518 1201
 typedef LONG NTSTATUS;
@@ -63,11 +64,11 @@ typedef CONST char *PCSZ;
 //20120517 1019
 #pragma warning(push)
 
-#   ifdef __INTEL_COMPILER
-#       pragma warning(disable:94)//the size of an array must be greater than zero
-#   else
-#       pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
-#   endif
+#ifdef __INTEL_COMPILER
+#   pragma warning(disable:94)//the size of an array must be greater than zero
+#else
+#   pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
+#endif
 
 typedef struct _OBJECT_NAME_INFORMATION {
 
@@ -249,4 +250,6 @@ typedef struct _VM_COUNTERS
   } VM_COUNTERS;
 typedef VM_COUNTERS *PVM_COUNTERS;
 
-#endif //#ifndef  FOR_RING0
+#endif  // _WIN32 FOR_RING0
+
+#endif  // _XLIB_STRUCT_RING3_H_

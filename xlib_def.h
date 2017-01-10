@@ -2,22 +2,45 @@
   \file  xlib_def.h
   \brief xlib_def.h定义了一些库常用宏。
 
-  \version    1.0.1401.07
+  \version    2.0.1611.1411
   \note       For All
 
   \author     triones
   \date       2014-01-07
 */
-#pragma once
+#ifndef _XLIB_DEF_H_
+#define _XLIB_DEF_H_
 
-#ifndef _WIN64
-typedef unsigned __int32    TUINT;
-typedef __int32             TINT;
+#ifdef _WIN32
+typedef unsigned __int8     uint8;
+typedef unsigned __int16    uint16;
+typedef unsigned __int32    uint32;
+typedef unsigned __int64    uint64;
+
+typedef __int8              int8;
+typedef __int16             int16;
+typedef __int32             int32;
+typedef __int64             int64;
+#else
+typedef unsigned char       uint8;
+typedef unsigned short      uint16;
+typedef unsigned int        uint32;
+typedef unsigned long long  uint64;
+
+typedef char                int8;
+typedef short               int16;
+typedef int                 int32;
+typedef long long           int64;
+#endif
+
+#if !defined(_WIN64) && !defined(__amd64)
+typedef uint32              TUINT;
+typedef int32               TINT;
 typedef unsigned long       TULONG;
 typedef long                TLONG;
 #else
-typedef unsigned __int64    TUINT;
-typedef __int64             TINT;
+typedef uint64              TUINT;
+typedef int64               TINT;
 typedef unsigned long long  TULONG;
 typedef long long           TLONG;
 #endif
@@ -32,17 +55,25 @@ typedef long long           TLONG;
     mkT(0x10000) = 1;         //赋值
   \endcode
 */
-#define mkQ(mem)    (*(unsigned __int64*)(mem))
-#define mkD(mem)    (*(unsigned __int32*)(mem))
-#define mkW(mem)    (*(unsigned __int16*)(mem))
-#define mkB(mem)    (*(unsigned __int8*)(mem))
+#define mkQ(mem)    (*(uint64*)(mem))
+#define mkD(mem)    (*(uint32*)(mem))
+#define mkW(mem)    (*(uint16*)(mem))
+#define mkB(mem)    (*(uint8*)(mem))
 #define mkP(mem)    (*(void**)(mem))
 #define mkTL(mem)   (*(TULONG*)(mem))
 
 //! 计算指定类型的数据长度
-#define sizeQ       (sizeof(unsigned __int64))
-#define sizeD       (sizeof(unsigned __int32))
-#define sizeW       (sizeof(unsigned __int16))
-#define sizeB       (sizeof(unsigned __int8))
+#define sizeQ       (sizeof(uint64))
+#define sizeD       (sizeof(uint32))
+#define sizeW       (sizeof(uint16))
+#define sizeB       (sizeof(uint8))
 #define sizeP       (sizeof(void*))
 #define sizeTL      (sizeof(TULONG))
+
+#ifndef _WIN32
+#   ifndef _countof
+#       define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#   endif
+#endif
+
+#endif  // _XLIB_DEF_H_

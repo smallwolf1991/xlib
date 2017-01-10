@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xlib", "xlib.vcxproj", "{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}"
 EndProject
@@ -17,6 +17,8 @@ Global
 		MT3|x64 = MT3|x64
 		MTd3|Win32 = MTd3|Win32
 		MTd3|x64 = MTd3|x64
+		test|Win32 = test|Win32
+		test|x64 = test|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.MD3|Win32.ActiveCfg = MD3|Win32
@@ -39,6 +41,10 @@ Global
 		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.MTd3|Win32.Build.0 = MTd3|Win32
 		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.MTd3|x64.ActiveCfg = MTd3|x64
 		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.MTd3|x64.Build.0 = MTd3|x64
+		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.test|Win32.ActiveCfg = test|Win32
+		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.test|Win32.Build.0 = test|Win32
+		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.test|x64.ActiveCfg = test|x64
+		{33ECAB7C-E117-4DC1-A82E-19A476EBB5EE}.test|x64.Build.0 = test|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

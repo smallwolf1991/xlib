@@ -11,11 +11,14 @@
   \author     triones
   \date       2013-08-06
 */
+#ifndef _XLIB_SYSSNAP_H_
+#define _XLIB_SYSSNAP_H_
 
-#pragma once
+#include <string>
 
 #include "xlib_base.h"
-#include <string>
+
+#ifdef _WIN32
 
 //! 用于基本Snapshot
 class SysSnap : public std::string
@@ -29,10 +32,10 @@ class SysSnap : public std::string
 
   \code
     SysProcessSnap sps;
-    for(const SYSTEM_PROCESS_INFORMATION& ppi : sps)
+    for(const auto& ppi : sps)
       {
-      TCHAR* lp = (ppi.ImageName.Buffer == nullptr) ? L"" : ppi.ImageName.Buffer;
-      cout << " " << ppi.ProcessId << "     " << ws2s(lp) << endl;
+      TCHAR* lp = (ppi.ImageName.Buffer == nullptr) ? L"[System Process]" : ppi.ImageName.Buffer;
+      cout << "\t" << (void*)ppi.ProcessId << "\t" << ws2s(lp) << endl;
       }
   \endcode
 */
@@ -61,10 +64,10 @@ class SysProcessSnap : public SysSnap
   用于线程枚举
 
   \code
-    SysThreadSnap sts((HANDLE)0);
-    for(const SYSTEM_THREAD& st : sts)
+    SysThreadSnap sts(GetCurrentProcess());
+    for(const auto& st : sts)
       {
-      cout << st.StartAddress << endl;
+      cout << "\t" << st.StartAddress << endl;
       }
   \endcode
 */
@@ -83,9 +86,9 @@ class SysThreadSnap : public SysProcessSnap
 
   \code
     SysDriverSnap sds;
-    for(const SYSTEM_MODULE& st : sds)
+    for(const auto& st : sds)
       {
-      cout << st.Name + st.NameOffset << endl;
+      cout << "\t" << st.ImageBaseAddress << "\t" << (char*)(st.Name + st.NameOffset) << endl;
       }
   \endcode
 */
@@ -97,7 +100,7 @@ class SysDriverSnap : public SysSnap
     const SYSTEM_MODULE* end() const;
   };
 
-#ifndef  FOR_RING0
+#ifndef FOR_RING0
 
 #include <Tlhelp32.h>
 //! 快照枚举模版，仿标准容器操作
@@ -105,7 +108,7 @@ class SysDriverSnap : public SysSnap
 
   \code
     ProcessSnap ps;
-    for(ProcessSnap::const_iterator it = ps.begin(); it != ps.end(); ++it)
+    for(const auto& it : ps)
       {
       wcout << it->szExeFile << endl;
       }
@@ -143,7 +146,7 @@ class Snapshot
           if(_s != nullptr)
             {
             const func_snap Next = (func_snap)NextFunc;
-            if(!Next(_s->hSnapshot,&(_s->st)))
+            if(!Next(_s->hSnapshot, &(_s->st)))
               _s = nullptr;
             }
           return *this;
@@ -179,7 +182,7 @@ class Snapshot
     const_iterator begin()
       {
       const func_snap First = (func_snap)FirstFunc;
-      if(First(hSnapshot,&st))  return this;
+      if(First(hSnapshot, &st))  return this;
       return nullptr;
       }
     const_iterator end() const
@@ -212,4 +215,8 @@ typedef Snapshot<
   Module32Next,
   TH32CS_SNAPMODULE>      ModuleSnap;
 
-#endif  //#ifndef  FOR_RING0
+#endif  // FOR_RING0
+
+#endif  // _WIN32
+
+#endif  // _XLIB_SYSSNAP_H_

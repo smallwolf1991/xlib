@@ -7,7 +7,10 @@
   \author   triones
   \date     2011-4-8
 */
-#pragma once
+#ifndef _XLIB_STRUCT_H_
+#define _XLIB_STRUCT_H_
+
+#ifdef _WIN32
 
 #include "xlib_def.h"
 
@@ -122,47 +125,47 @@ typedef enum _SYSTEM_HANDLE_TYPE
 */
 struct CPU_FLAGS
   {
-  TULONG CF:1;   //!< S  Carry Flag
-  TULONG O1:1;
-  TULONG PF:1;   //!< S  Parity Flag
-  TULONG Z3:1;
+  TUINT CF:1;   //!< S  Carry Flag
+  TUINT O1:1;
+  TUINT PF:1;   //!< S  Parity Flag
+  TUINT Z3:1;
 
-  TULONG AF:1;   //!< S  Auxiliary Carry Flag
-  TULONG Z5:1;
-  TULONG ZF:1;   //!< S  Zero Flag
-  TULONG SF:1;   //!< S  Sign Flag
+  TUINT AF:1;   //!< S  Auxiliary Carry Flag
+  TUINT Z5:1;
+  TUINT ZF:1;   //!< S  Zero Flag
+  TUINT SF:1;   //!< S  Sign Flag
 
-  TULONG TF:1;   //!< X  Trap Flag
-  TULONG IF:1;   //!< X  Interrupt Enable Flag
-  TULONG DF:1;   //!< C  Direction Flag
-  TULONG OF:1;   //!< S  Overflow Flag
+  TUINT TF:1;   //!< X  Trap Flag
+  TUINT IF:1;   //!< X  Interrupt Enable Flag
+  TUINT DF:1;   //!< C  Direction Flag
+  TUINT OF:1;   //!< S  Overflow Flag
 
-  TULONG IOPL:2; //!< X  I/O Privilege Level
-  TULONG NT:1;   //!< X  Nested Task (NT)
-  TULONG Z15:1;
+  TUINT IOPL:2; //!< X  I/O Privilege Level
+  TUINT NT:1;   //!< X  Nested Task (NT)
+  TUINT Z15:1;
 
-  TULONG RF:1;   //!< X  Resume Flag
-  TULONG VM:1;   //!< X  Virtual-8086 Mode
-  TULONG AC:1;   //!< X  Alignment Check
-  TULONG VIF:1;  //!< X  Virtual Interrupt Flag
+  TUINT RF:1;   //!< X  Resume Flag
+  TUINT VM:1;   //!< X  Virtual-8086 Mode
+  TUINT AC:1;   //!< X  Alignment Check
+  TUINT VIF:1;  //!< X  Virtual Interrupt Flag
 
-  TULONG VIP:1;  //!< X  Virtual Interrupt Pending
-  TULONG ID:1;   //!< X  ID Flag
-  TULONG Z22:1;
-  TULONG Z23:1;
+  TUINT VIP:1;  //!< X  Virtual Interrupt Pending
+  TUINT ID:1;   //!< X  ID Flag
+  TUINT Z22:1;
+  TUINT Z23:1;
 
-  TULONG Z24:1;
-  TULONG Z25:1;
-  TULONG Z26:1;
-  TULONG Z27:1;
+  TUINT Z24:1;
+  TUINT Z25:1;
+  TUINT Z26:1;
+  TUINT Z27:1;
 
-  TULONG Z28:1;
-  TULONG Z29:1;
-  TULONG Z30:1;
-  TULONG Z31:1;
+  TUINT Z28:1;
+  TUINT Z29:1;
+  TUINT Z30:1;
+  TUINT Z31:1;
 
 #ifdef _WIN64
-  TULONG ZReserved:32;  //!< x64下高32位保留
+  TUINT ZReserved:32;  //!< x64下高32位保留
 #endif
   };
 
@@ -185,11 +188,11 @@ typedef struct _SYSTEM_MODULE
 //http://undocumented.ntinternals.net/UserMode/Structures/SYSTEM_MODULE_INFORMATION.html
 #pragma warning(push)
 
-#   ifdef __INTEL_COMPILER
-#       pragma warning(disable:94)//the size of an array must be greater than zero
-#   else
-#       pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
-#   endif
+#ifdef __INTEL_COMPILER
+#   pragma warning(disable:94)//the size of an array must be greater than zero
+#else
+#   pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
+#endif
 
 typedef struct _SYSTEM_MODULE_INFORMATION
   {
@@ -218,11 +221,11 @@ typedef struct _SYSTEM_HANDLE
 //http://forum.sysinternals.com/howto-enumerate-handles_topic18892.html
 #pragma warning(push)
 
-#   ifdef __INTEL_COMPILER
-#       pragma warning(disable:94)//the size of an array must be greater than zero
-#   else
-#       pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
-#   endif
+#ifdef __INTEL_COMPILER
+#    pragma warning(disable:94)//the size of an array must be greater than zero
+#else
+#    pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
+#endif
 
 typedef struct _SYSTEM_HANDLE_INFORMATION 
   {
@@ -253,11 +256,11 @@ typedef struct _SYSTEM_THREAD
 //http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/System%20Information/Structures/SYSTEM_PROCESS_INFORMATION.html
 #pragma warning(push)
 
-#   ifdef __INTEL_COMPILER
-#       pragma warning(disable:94)//the size of an array must be greater than zero
-#   else
-#       pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
-#   endif
+#ifdef __INTEL_COMPILER
+#    pragma warning(disable:94)//the size of an array must be greater than zero
+#else
+#    pragma warning(disable:4200)//使用了非标准扩展 : 结构/联合中的零大小数组
+#endif
 
 typedef struct _SYSTEM_PROCESS_INFORMATION
   {
@@ -280,3 +283,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
   } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
 #pragma warning(pop)
+
+#endif  // _WIN32
+
+#endif  // _XLIB_STRUCT_H_

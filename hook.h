@@ -12,14 +12,16 @@
   \author     triones
   \date       2010-08-27
 */
+#ifndef _XLIB_HOOK_H_
+#define _XLIB_HOOK_H_
 
-#pragma once
+# ifdef _WIN32
 
 #include "xlib_base.h"
 
-#if defined(FOR_RING0) && defined(__EXCEPTIONS)
-# error "内核模式不支持C++异常，需关闭之"
-#endif
+#   if defined(FOR_RING0) && defined(__EXCEPTIONS)
+#     error "内核模式不支持C++异常，需关闭之"
+#   endif                               // FOR_RING0 && __EXCEPTIONS
 
 //! Hook错误码(错误码不添加预处理指令，会造成显示值与实际值不符)
 enum HookErrCode
@@ -103,22 +105,22 @@ typedef unsigned __int32 AddrDisp;
 */
 size_t CalcOffset(const void* mem, const void* dest);
 
-#ifdef _WIN64
+#   ifdef _WIN64
 //! x64检测是否有效的AddrDisp
 bool IsValidAddrDisp(const size_t addrdisp);
-#endif
+#   endif                               // _WIN64
 
 //! 前置声明，不开放定义
 class HookNode;
 
 //! 标准回调函数使用的CPU结构
-#pragma warning(push)
-#pragma warning(disable:4510)  //C4510: 未能生成默认构造函数
-#pragma warning(disable:4512)  //C4512: 未能生成赋值运算符
-#pragma warning(disable:4610)  //C4610: 永远不能实例化
+#   pragma warning(push)
+#   pragma warning(disable:4510)  //C4510: 未能生成默认构造函数
+#   pragma warning(disable:4512)  //C4512: 未能生成赋值运算符
+#   pragma warning(disable:4610)  //C4610: 永远不能实例化
 struct CPU_ST
   {
-#ifndef _WIN64
+#   ifndef _WIN64
   DWORD         regEdi;
   DWORD         regEsi;
   DWORD         regEbp;
@@ -129,7 +131,7 @@ struct CPU_ST
   DWORD         regEax;
   CPU_FLAGS     regflag;
   DWORD         regEip;
-#else
+#   else                                // _WIN64
   DWORD64       regRcx;
   DWORD64       regRdx;
   DWORD64       regR8;
@@ -148,16 +150,16 @@ struct CPU_ST
   DWORD64       regR15;
   CPU_FLAGS     regflag;
   DWORD64       regRip;
-#endif
+#   endif                               // _WIN64
   };
-#pragma warning(pop)
+#   pragma warning(pop)
 
 //! 回调函数格式
-#ifndef _WIN64
+#   ifndef _WIN64
 typedef void(__stdcall *HookRoutine)(CPU_ST* lpcpu);
-#else
+#   else                                // _WIN64
 typedef void(*HookRoutine)(CPU_ST* lpcpu);
-#endif
+#   endif                               // _WIN64
 
 //! 普通Hook函数
 /*!
@@ -193,11 +195,11 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
       return;
       }
     //在0x401000下5 byte JMP XXX钩子，代码先行
-    HookNode* node = Hook((void*)0x401000,5,Routine,false);
+    HookNode* node = Hook((void*)0x401000, 5, Routine, false);
     //在0x401000下6 byte JMP [XXX]钩子，代码后行
-    HookNode* node = Hook((void*)0x401000,6,Routine,true);
+    HookNode* node = Hook((void*)0x401000, 6, Routine, true);
     //在0x401000下1 byte UEF钩子，代码后行
-    HookNode* node = Hook((void*)0x401000,1,Routine,true);
+    HookNode* node = Hook((void*)0x401000, 1, Routine, true);
     if(node == nullptr)
       {
       cout << "下钩子出错，错误码：" << GetLastHookErr();
@@ -241,17 +243,17 @@ HookNode* Hook(void*              hookmem,
 
   \code
     #include "hook.h"
-    int __stdcall Test(int a,int b)
+    int __stdcall Test(int a, int b)
       {
       return a+b;
       }
-    typedef int (__stdcall *func)(int a,int b);
+    typedef int (__stdcall *func)(int a, int b);
     func oldfunc = Test;
     void __stdcall Routine(CPU_ST* lpcpu)
       {
       ...
       }
-    HookNode* node = Hook((void*)&oldfunc,Routine,true,false);
+    HookNode* node = Hook((void*)&oldfunc, Routine, true, false);
     if(node == nullptr)
       {
       cout << "下钩子出错，错误码：" << GetLastHookErr();
@@ -290,9 +292,9 @@ HookNode* Hook(void*              hookmem,
 
   \code
     #include "hook.h"
-    HookNode* node = Hook((void*)0x401000,5,Routin,false);
+    HookNode* node = Hook((void*)0x401000, 5, Routin, false);
     if(node == nullptr) return;
-    cout << "卸载钩子：" << UnHook(node,false);
+    cout << "卸载钩子：" << UnHook(node, false);
   \endcode
 
 */
@@ -463,3 +465,7 @@ HookNode* Hook2Log(void*              hookmem,
                    hook2log_out_func  log_out_func = nullptr,
                    void*              p_shellcode = nullptr,
                    const intptr_t     expandargc = 0);
+
+# endif                                 // _WIN32
+
+#endif                                  // _XLIB_HOOK_H_

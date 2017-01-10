@@ -18,54 +18,54 @@
   \author     triones
   \date       2014-01-06
 */
+#ifndef _XLIB_H_
+#define _XLIB_H_
 
-#pragma once
-
-#include "xlib_base.h"          //+20140106   locked        base/base
+#include "xlib_base.h"          //+20161114   locked        base/base
 //          xlib_link.h
 //          xlib_struct.h
 //          xlib_struct_ring0.h
 //          xlib_struct_ring3.h
-#include "xlib_def.h"           //-20140215   locked        base/def
-#include "xlib_link.h"          //-20140106   locked        base/link
-#include "xlib_struct.h"        //-20131206   open          base/struct
+//          xlib_test.h
+#include "xlib_def.h"           //-20161114   locked        base/def
+#include "xlib_link.h"          //-20161114   locked        base/link
+#include "xlib_struct.h"        //-20161114   open          base/struct
 //          xlib_def.h
-#include "xlib_struct_ring0.h"  //-20131206   open          base/struct
+#include "xlib_struct_ring0.h"  //-20161114   open          base/struct
 //          xlib_def.h
-#include "xlib_struct_ring3.h"  //-20131206   open          base/struct
+#include "xlib_struct_ring3.h"  //-20161114   open          base/struct
 //          xlib_def.h
+#include "xlib_test.h"          //+20161114   open          base/test
 
 //以下文件都默认包含xlib_base.h
-#include "xlib_nt.h"            //+20140107   open          base/nt
+#include "xlib_nt.h"            //+20161114   open          base/nt
 
-#include "swap.h"               //-20140107   locked        memory/swap
-#include "xrand.h"              //+20160719   locked        algorithm/xrand
-#include "crc.h"                //+20140725   locked        algorithm/crc
-#include "xmutex.h"             //+20130301   locked        system_object/mutex
-#include "xevent.h"             //+20130301   locked        system_object/event
-#include "Critical.h"           //+20121112   close         system_object/critical
-#include "singleton.h"          //-20121112   locked        container/singleton
-#include "ws_s.h"               //+20160314   locked        string/ws&s
-//              xlib_nt.h
-#include "ws_utf8.h"            //+20140507   locked        string/ws&utf8
-#include "xblk.h"               //+20131210   locked        memory/xblk
+#include "aes.h"                //+20161216   locked        algorithm/aes
+#include "crc.h"                //+20161216   locked        algorithm/crc
+#include "des.h"                //+20161216   locked        algorithm/des
+#include "swap.h"               //-20161114   locked        memory/swap
+#include "md5.h"                //+20161115   locked        algorithm/md5
 //              swap.h
-#include "xmsg.h"               //+20160720   locked        string/xmsg
+#include "xrand.h"              //+20161114   locked        algorithm/xrand
+#include "tean.h"               //+20161216   locked        algorithm/tean
+//              xrand.h
+#include "singleton.h"          //-20121112   locked        container/singleton
+#include "xline.h"              //-20161115   locked        container/xline
+//          swap.h
+#include "xblk.h"               //+20161115   locked        memory/xblk
+//              swap.h
+#include "ws_s.h"               //+20161223   locked        string/ws&s
+//              xlib_nt.h
+#include "ws_utf8.h"            //+20170103   locked        string/ws&utf8
+//          ws_s.h
+#include "xmsg.h"               //+20161115   locked        string/xmsg
 //          ws_utf8.h
-//              ws_s.h
-#include "xlog.h"               //+20131210   locked        string/xlog
+#include "xlog.h"               //+20161115   locked        string/xlog
 //          xmsg.h
-#include "hex_str.h"            //+20150509   locked        string/hex&str
+#include "hex_str.h"            //+20170103   locked        string/hex&str
 //          xmsg.h
 //              ws_s.h
 //              ws_utf8.h
-#include "xline.h"              //-20150122   locked        container/xline
-//          swap.h
-#include "md5.h"                //+20160719   locked        algorithm/md5
-//              swap.h
-#include "tean.h"               //+20160720   locked        algorithm/tean
-//              xrand.h
-#include "aes.h"                //+20160719   locked        algorithm/aes
 #include "syssnap.h"            //+20140219   to add        system_object/syssnap
 //          xline.h
 //              xlib_nt.h
@@ -73,6 +73,10 @@
 //          xblk.h
 //              ws_s.h
 //              syssnap.h
+#include "xSock.h"              //+20121113   close         sock/xsock
+//          xWSA.h
+//          xline.h
+//          xlog.h
 #include "hook.h"               //+20160612   check         memory/hook
 //              xlib_nt.h
 //              xblk.h
@@ -81,26 +85,15 @@
 //              hex_str.h
 //              xlog.h
 //              syssnap.h
+#include "xevent.h"             //+20130301   locked        system_object/event
 #include "caller.h"             //+20150721   locked        memory/caller
 //              hook.h
 //              xevent.h
-#include "xWSA.h"               //+20160720   locked        sock/wsa
-//              xmsg.h
-#include "xSock.h"              //+20121113   close         sock/xsock
-//          xWSA.h
-//          xline.h
-//          xlog.h
-#include "xNetDl.h"             //+20150123   check         sock/netdl
-//              xWSA.h
-//              xlog.h
-#include "xServer.h"            //+20121114   close         sock/xserver
-//          xSock.h
-//          ws_s.h
-//          xline.h
 #include "signaturematcher.h"   //+20160406   check         algorithm/signaturematcher
 //          xline.h
 //          xblk.h
 //              xlog.h
 //              hex_str.h
 //              ws_s.h
-#include "des.h"                //+20160719   close         algorithm/des
+
+#endif  // _XLIB_H_

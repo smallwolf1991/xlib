@@ -1,49 +1,37 @@
 ﻿/*!
   \file  ws_s.h
-  \brief ws_s.h用于如ASCII与UNICODE相互转换
+  \brief ws_s.h用于如ASCII与UNICODE(UCS2)相互转换
 
   - 使用内核函数转换，而不是使用转换API
+  - Windows使用系统默认的ASCII编码（一般是GB2312）
+  - Linux需要设置，默认GB2312。（使用ICONV库）
+  - 由于Windows与Linux的Unicode默认不同，所以这里指的Unicode统一为UCS2
   
-  \version    5.2.1603.1409
+  \version    6.0.1612.2310
   \note       For All
 
   \author     triones
   \date       2011-11-11
 */
+#ifndef _XLIB_WS_S_H_
+#define _XLIB_WS_S_H_
 
-#pragma once
-
-#include "xlib_base.h"
 #include <string>
 
-//! UNICODE串转换ASCII串(版本一)
-/*!
-  \param  s       指向转换ASCII结果的缓冲区
-  \param  max_s   指示转换ASCII结果的缓冲区的最大容量(以byte计)
-  \param  ws      需要转换的UNICODE串
-  \param  ws_len  需要转换的UNICODE串的长度(以宽字计)\n
-                  ws_len < 0时，视ws为null结束的串
-  \return         转换后的ASCII数
+#include "xlib_base.h"
 
-  \code
-    #include "ws_s.h"
-    char str[40];
-    if(!ws2s(str, sizeof(str), L"文字"))
-      {
-      cout << "ws2s转换出错，LastError：" << GetLastError();
-      }
-    else
-      {
-      cout << "转换结果：" << str;
-      }
-  \endcode
-*/
-size_t ws2s(char*           s,
-            const size_t    max_s,
-            const wchar_t*  ws,
-            const size_t    ws_len = -1);
+#ifdef _WIN32
+#define charucs2_t    wchar_t
+#define ucs2string    std::wstring
+#else
+#define charucs2_t    char16_t
+#define ucs2string    std::u16string
+#endif
 
-//! UNICODE串转换ASCII串(版本二)
+const char cnull = '\0';
+const charucs2_t snull = L'\0';
+
+//! UNICODE串转换ASCII串
 /*!
   \param  ws  需要转换的UNICODE串
   \return     转换后的对应ASCII串对象
@@ -59,40 +47,11 @@ size_t ws2s(char*           s,
       {
       cout << "转换结果：" << s;
       }
-    //或者，可以如下操作
-    cout << "转换结果：" << ws2s(L"文字");
   \endcode
 */
-std::string ws2s(const std::wstring& ws);
+std::string ws2s(const ucs2string& ws);
 
-//! ASCII串转换UNICODE串(版本一)
-/*!
-  \param  ws      指向转换UNICODE结果的缓冲区
-  \param  max_ws  指示转换UNICODE结果的缓冲区的最大容量(以宽字计)
-  \param  s       需要转换的ASCII串
-  \param  s_len   需要转换的ASCII串的长度(以宽字计)\n
-                  s_len < 0时，视s为null结束的串
-  \return         转换成功后的UNICODE数
-
-  \code
-    #include "ws_s.h"
-    wchar_t str[40];
-    if(!s2ws(str, _countof(str), "文字"))
-      {
-      wcout << L"s2ws转换出错，LastError：" << GetLastError();
-      }
-    else
-      {
-      wcout << L"转换结果：" << str;
-      }
-  \endcode
-*/
-size_t s2ws(wchar_t*        ws,
-            const size_t    max_ws,
-            const char*     s,
-            const size_t    s_len = -1);
-
-//! ASCII串转换UNICODE串(版本二)
+//! ASCII串转换UNICODE串
 /*!
   \param  s   需要转换的ASCII串
   \return     转换后的对应UNICODE串对象
@@ -108,8 +67,20 @@ size_t s2ws(wchar_t*        ws,
       {
       wcout << L"转换结果：" << ws;
       }
-    //或者，可以如下操作
-    wcout << L"转换结果：" << s2ws(L"文字");
   \endcode
 */
-std::wstring s2ws(const std::string& s);
+ucs2string s2ws(const std::string& s);
+
+#ifndef _WIN32
+//! 设置ASCII默认编码
+/*!
+  \param  encode  需要改变的默认编码\n
+                  当encode == nullptr时，返回当前默认编码\n
+                  当encode == ""时，设置默认编码为GB2312
+  \return         设置后的编码
+*/
+const char* set_ascii_encode(const char* encode = nullptr);
+
+#endif  // _WIN32
+
+#endif  // _XLIB_WS_S_H_

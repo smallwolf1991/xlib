@@ -2,20 +2,88 @@
   \file  xSock.h
   \brief xSock.h定义了网络通讯的基本封装
 
-  \version    3.0.1211.1316
+  \version    4.0.1701.0317
   \note       Only For Ring3
 
   \author     triones
   \date       2011-01-27
 */
-
-#pragma once
+#ifndef _XLIB_XSOCK_H_
+#define _XLIB_XSOCK_H_
 
 #ifndef FOR_RING0
 
-#include "xWSA.h"
+#ifdef _WIN32
+
+#include <winsock2.h>
+#pragma comment (lib, "ws2_32.lib")
+#include <ws2tcpip.h>
+
+//! 用于保证sock环境初始化，注意构造失败抛出异常
+class xWSA
+  {
+  public:
+    xWSA();
+  };
+
+#define xSockErrno      (int)WSAGetLastError()
+#define xSockExpt(msg)  throw std::runtime_error(xmsg() << string(msg"失败:") << xSockErrno);
+
+#else   // _WIN32
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#define SOCKET          int
+#define closesocket     close
+#define SD_BOTH         SHUT_RDWR
+#define ioctlsocket     ioctl
+#define xSockErrno      errno
+#define xSockExpt(msg)  throw std::runtime_error(string(msg"失败:") + string(strerror(xSockErrno)));
+#define FAR
+#define IN
+
+#endif  // _WIN32
+
+#include <string>
+
+#include "xlib_base.h"
 #include "xline.h"
 #include "xlog.h"
+
+//! 由指定IP地址/IP地址串、端口/端口字串，组织sockaddr_in结构
+/*!
+  解析错误时，抛出runtime_error异常
+
+  \code
+    sockaddr_in addr = AddrInfo("127.0.0.1", "4210");
+  \endcode
+*/
+sockaddr_in AddrInfo(PCSTR host, PCSTR ports);
+
+#ifdef _WIN32
+
+/*!
+  解析错误时，抛出runtime_error异常
+
+  \code
+    sockaddr_in addr = AddrInfo(L"127.0.0.1", L"4210");
+  \endcode
+*/
+sockaddr_in AddrInfo(PCWSTR host, PCWSTR ports);
+
+#endif
+
+/*!
+  \code
+    sockaddr_in addr = AddrInfo(0x7F000001, 4210);
+  \endcode
+*/
+sockaddr_in AddrInfo(const uint32 host, const uint16 ports);
+
+//! 由指定sockaddr_in结构，输出“#.#.#.#:#”串
+std::string IpString(const sockaddr_in& addr);
 
 //! 模板，用于指定协议建立socket
 template<int TYPES> class xSocket
@@ -24,20 +92,26 @@ template<int TYPES> class xSocket
     //! 自动创建socket
     xSocket()
       {
-      _hSocket = socket(PF_INET,TYPES,0);
-      if(hSocket() == INVALID_SOCKET)      throw std::runtime_error("建立Socket失败");
+      _hSocket = socket(AF_INET, TYPES, 0);
+      if(hSocket() <= 0)
+        {
+        xSockExpt("创建Socket");
+        }
       }
     //! 指定接受已经存在的socket
     xSocket(const SOCKET hS)
       :_hSocket(hS)
       {
-      if(hSocket() == INVALID_SOCKET)      throw std::runtime_error("初始化Socket失败");
+      if(hSocket() <= 0)
+        {
+        xSockExpt("初始化Socket");
+        }
       }
     virtual ~xSocket()
       {
-      if(hSocket() != INVALID_SOCKET)
+      if(hSocket() > 0)
         {
-        shutdown(hSocket(),SD_BOTH);
+        shutdown(hSocket(), SD_BOTH);
         closesocket(hSocket());
         }
       }
@@ -51,8 +125,12 @@ template<int TYPES> class xSocket
     xSocket& operator=(const xSocket&);
   private:
     SOCKET      _hSocket;
-    const xWSA  wsa;
+#ifdef _WIN32
+    static const xWSA wsa;
+#endif
   };
+
+#define xSockTimeOut 50                 //默认收发延时50ms
 
 //! 应用于TCP及UDP的基本通讯
 template<int TYPES> class xSock
@@ -83,50 +161,72 @@ template<int TYPES> class xSock
       TCP协议建立客户端时，自动连接指定IP。\n
       客户端默认收发延时50ms。服务器端无限制
     */
-    xSock(const sockaddr_in& addr):_socket(),addrto(addr)
+    xSock(const sockaddr_in& addr)
+      :addrto(addr), _socket()
       {
       if(TYPES == SOCK_DGRAM)   recvbuf.reserve(0x400);
-      if(addrto.sin_addr.S_un.S_addr == INADDR_ANY)
+      if(addrto.sin_addr.s_addr == INADDR_ANY)
         {
-        if(bind(hSocket(),(sockaddr*)&addrto,sizeof(addrto)))
-          throw std::runtime_error("xSock 绑定失败");
+        if(bind(hSocket(), (sockaddr*)&addrto, sizeof(addrto)))
+          {
+          xSockExpt("xSock绑定");
+          }
         if(TYPES == SOCK_STREAM)
           {
-          if(listen(hSocket(),0))
-            throw std::runtime_error("xSock 监听失败");
+          if(listen(hSocket(), 0))
+            {
+            xSockExpt("xSock监听");
+            }
           }
         }
       else
         {
-        opt(SOL_SOCKET,SO_SNDTIMEO,(char*)&timeout,sizeof(timeout));
-        opt(SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(timeout));
+#ifdef _WIN32
+        int timeout = xSockTimeOut;
+#else
+        timeval timeout = { xSockTimeOut / 1000, (xSockTimeOut % 1000) * 1000 };
+#endif
+        opt(SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout));
+        opt(SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
         if(TYPES == SOCK_STREAM)
           {
-          if(connect(hSocket(),(sockaddr*)&addrto,sizeof(addrto)))
-            throw std::runtime_error("xSock 连接失败");
+          if(connect(hSocket(), (sockaddr*)&addrto, sizeof(addrto)))
+            {
+            xSockExpt("xSock连接");
+            }
           }
         }
       }
     //! 指定SOCKET，作为客户端建立xSock
-    xSock(const SOCKET hS,const sockaddr_in& addr)
-      :_socket(hS),addrto(addr)
+    xSock(const SOCKET hS, const sockaddr_in& addr)
+      :addrto(addr), _socket(hS)
       {
-      opt(SOL_SOCKET,SO_SNDTIMEO,(char*)&timeout,sizeof(timeout));
-      opt(SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(timeout));
+#ifdef _WIN32
+      int timeout = xSockTimeOut;
+#else
+      timeval timeout = { xSockTimeOut / 1000, (xSockTimeOut % 1000) * 1000 };
+#endif
+      opt(SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout));
+      opt(SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
       }
     //! 用于服务器端accept
     _Myt* apt()
       {
-      int namelen = sizeof(addrfrom);
-      const SOCKET hS = accept(hSocket(),(sockaddr*)&addrfrom,&namelen);
-      if(hS == INVALID_SOCKET)    throw std::runtime_error("xSock 接受连接失败");
-      return new _Myt(hS,addrfrom);
+      socklen_t namelen = sizeof(addrfrom);
+      const SOCKET hS = accept(hSocket(), (sockaddr*)&addrfrom, &namelen);
+      if(hS <= 0)
+        {
+        xSockExpt("xSock接受连接");
+        }
+      return new _Myt(hS, addrfrom);
       }
     //! 用于setsockopt
-    void opt(int level,int optname,const char FAR * optval,int optlen)
+    void opt(int level, int optname, const char FAR * optval, int optlen)
       {
-      if(setsockopt(hSocket(),level,optname,optval,optlen))
-        throw  std::runtime_error("xSock 设置失败");
+      if(setsockopt(hSocket(), level, optname, optval, optlen))
+        {
+        xSockExpt("xSock设置");
+        }
       }
     //! 用于基本发送，注意不抛出异常
     bool send(IN const char FAR * buf, IN int len)
@@ -135,14 +235,14 @@ template<int TYPES> class xSock
         {
         int sendlen;
         if(TYPES == SOCK_STREAM)
-          sendlen = ::send(hSocket(),buf,len,0);
+          sendlen = ::send(hSocket(), buf, len, 0);
         else
-          sendlen = ::sendto(hSocket(),buf,len,0,
-          (const sockaddr *)&addrto,sizeof(addrto));
+          sendlen = ::sendto(hSocket(), buf, len, 0,
+          (const sockaddr *)&addrto, sizeof(addrto));
 
         if(sendlen <= 0)
           {
-          xerr << "xSock send Err:" << WSAGetLastError();
+          xerr << "xSock send Err:" << xSockErrno;
           return false;
           }
         len -= sendlen;
@@ -153,13 +253,15 @@ template<int TYPES> class xSock
     //! 用于基本发送，主要应用于结构体
     template<typename T> bool send(T const& v)
       {
-      return send((char*)&v,sizeof(T));
+      return send((char*)&v, sizeof(T));
       }
     //! 发送数据，注意发送失败，抛出异常。发送成功，清除缓冲
     _Myt& send()
       {
-      if(!send((char*)sendbuf.c_str(),(int)sendbuf.size()))
-        throw std::runtime_error("xSock 发送数据失败");
+      if(!send((char*)sendbuf.c_str(), (int)sendbuf.size()))
+        {
+        xSockExpt("xSock发送");
+        }
       sendbuf.clear();
       return *this;
       }
@@ -175,21 +277,21 @@ template<int TYPES> class xSock
       int recvlen;
       if(TYPES == SOCK_STREAM)
         {
-        recvlen = ::recv(hSocket(),buf,len,0);
+        recvlen = ::recv(hSocket(), buf, len, 0);
         }
       else
         {
-        int addrfromlen = sizeof(addrfrom);
-        memset(&addrfrom,0,sizeof(addrfrom));
-        recvlen = ::recvfrom(hSocket(),buf,len,0,
-          (sockaddr*)&addrfrom,&addrfromlen);
+        socklen_t addrfromlen = sizeof(addrfrom);
+        memset(&addrfrom, 0, sizeof(addrfrom));
+        recvlen = ::recvfrom(hSocket(), buf, len, 0,
+          (sockaddr*)&addrfrom, &addrfromlen);
         }
       return recvlen;
       }
     //! 用于基本接收，主要应用于结构体
     template<typename T> int recv(T& v)
       {
-      return recv((char*)&v,sizeof(T));
+      return recv((char*)&v, sizeof(T));
       }
     //! 接收数据
     int recv()
@@ -199,34 +301,36 @@ template<int TYPES> class xSock
         {
         if(recvbuf.capacity() - recvbuf.size() == 0)
           recvbuf.reserve(recvbuf.capacity() + 0x40);
-        unsigned char* lprecv = const_cast<unsigned char*>(recvbuf.end()._Ptr);
+        unsigned char* lprecv = const_cast<unsigned char*>(recvbuf.c_str()) + recvbuf.size();
         const int recvlen = recv((char*)lprecv, (int)(recvbuf.capacity() - recvbuf.size()));
         if(recvlen == 0)
           {
           xtrace << "xSock recv close";
           return 0;
           }
-        if(recvlen == SOCKET_ERROR)
+        if(recvlen < 0)
           {
-          int codes = WSAGetLastError();
+          int codes = xSockErrno;
           xtrace << "xSock recv Err:" << codes;
           switch(codes)
             {
-            case WSAETIMEDOUT:  return mainrecvlen;
-            case WSAECONNRESET:  return mainrecvlen;
-            case WSAEMSGSIZE:
+            case ETIMEDOUT:  return mainrecvlen;
+            case ECONNRESET:  return mainrecvlen;
+            case EMSGSIZE:
               //UDP会出现这个错误，此时数据已经被截断
               {
               const int len = (int)(recvbuf.capacity() - recvbuf.size());
-              recvbuf.append(lprecv, mainrecvlen);
+              recvbuf.append((const unsigned char*)lprecv, mainrecvlen);
               recvbuf.reserve(recvbuf.capacity() + 0x40);
               return mainrecvlen + len;
               }
-            case WSAENOTCONN:    throw std::runtime_error("xSock 作为服务器不能接收数据");
-            default:            throw std::runtime_error("xSock 接收数据失败");
+            case ENOTCONN:
+              xSockExpt("xSock无连接");
+            default:
+              xSockExpt("xSock接收");
             }
           }
-        recvbuf.append(lprecv,recvlen);
+        recvbuf.append((const unsigned char*)lprecv, recvlen);
         mainrecvlen += recvlen;
         if(recvbuf.capacity() - recvbuf.size() != 0)
           break;//如果缓冲被填满，可能还有数据需要接收
@@ -239,9 +343,8 @@ template<int TYPES> class xSock
     //因查询的需要，又不愿意写独立的访问函数，故意放置为public
     sockaddr_in addrto;
     sockaddr_in addrfrom;
-    static const int timeout = 50;  //默认收发延时50ms
   private:
-    const xSocket<TYPES> _socket;
+    xSocket<TYPES> _socket;
   };
 
 typedef xSock<SOCK_STREAM>    xTCP;
@@ -251,8 +354,8 @@ typedef xUDP& (*xUDP_func)(xUDP&);
 typedef xTCP& (*xTCP_func)(xTCP&);
 
 //! 重载使xSock能以流形式操作数据，这个重载无法做在类内部
-xUDP& operator<<(xUDP& s,xUDP_func pfn);
-xTCP& operator<<(xTCP& s,xTCP_func pfn);
+xUDP& operator<<(xUDP& s, xUDP_func pfn);
+xTCP& operator<<(xTCP& s, xTCP_func pfn);
 
 //! 重载使xSock能以流形式发送数据
 xUDP& xsend(xUDP& s);
@@ -260,4 +363,6 @@ xTCP& xsend(xTCP& s);
 xUDP& xxsend(xUDP& s);
 xTCP& xxsend(xTCP& s);
 
-#endif  //#ifndef FOR_RING0
+#endif  // FOR_RING0
+
+#endif  // _XLIB_XSOCK_H_

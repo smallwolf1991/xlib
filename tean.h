@@ -10,34 +10,38 @@
   - 余下未能成组的数据用最少3字节随机数填充，成一或二组数据头。((n+7-8)%8+3+x)%8==0；
   - 第一字节最低三位写入补充填充数x(0~7)；
   - 每组数据与上组密文异或，data ^= cipher；
-  - 结果用TEA算法加密，cipher = TEA_E(data,key)；
+  - 结果用TEA算法加密，cipher = TEA_E(data, key)；
   - 结果与上组运算后的数据异或得到密文，cipher ^= pre_data；
   - 循环加密。加密后的密文至少16字节，长度len%8==0；
   - 解密过程反之。上组运算后数据与密文异或，pre_data ^= cipher；
-  - 结果用TEA算法解密，pre_data = TEA_D(pre_data,key)；
+  - 结果用TEA算法解密，pre_data = TEA_D(pre_data, key)；
   - 明文由结果与上组密文异或得到，data = pre_data ^ pre_cipher
 
-  \version    2.2.1607.2009
+  \version    3.0.1612.1615
   \note       For All
 
   \author     triones
   \date       2013-01-08
 */
-#pragma once
+#ifndef _XLIB_TEAN_H_
+#define _XLIB_TEAN_H_
 
-#include "xlib_base.h"
 #include <string>
 
-typedef unsigned long TEAN_UL;  //!< TEAN算法使用32bit
+#include "xlib_base.h"
 
+typedef uint32  TEAN_UL;  //!< TEAN算法使用32bit
+
+#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable:4201)   //warning C4201: 使用了非标准扩展 : 无名称的结构/联合
+#endif
 //! 分组数据，两个32 bit值
 class TEAN_DATA
   {
   public:
     TEAN_DATA();
-    TEAN_DATA(const TEAN_UL a,const TEAN_UL b);
+    TEAN_DATA(const TEAN_UL a, const TEAN_UL b);
     TEAN_DATA(const void* datas);
     operator std::string();
   public:
@@ -75,119 +79,108 @@ class TEAN_KEY
       unsigned char Key[sizeof(TEAN_UL) * 4];
       };
   };
+#ifdef _WIN32
 #pragma warning(pop)
+#endif  // _WIN32
 
-TEAN_DATA TeaEncipher(const TEAN_DATA&    encrypt_data,
+TEAN_DATA TeaEncipher(const TEAN_DATA&    data,
                       const TEAN_KEY&     key,
                       const TEAN_UL       delta,
                       const size_t        xtea_round);
 
-TEAN_DATA TeaDecipher(const TEAN_DATA&    decrypt_data,
+TEAN_DATA TeaDecipher(const TEAN_DATA&    data,
                       const TEAN_KEY&     key,
                       const TEAN_UL       delta,
                       const size_t        xtea_round);
 
-std::string TeaEncrypt(const void*        encrypt_data,
-                       const size_t       encrypt_data_size,
-                       const TEAN_KEY&    encrypt_key,
+std::string TeaEncrypt(const void*        data,
+                       const size_t       size,
+                       const TEAN_KEY&    key,
                        const TEAN_UL      delta,
                        const size_t       xtea_round);
 
-std::string TeaDecrypt(const void*        decrypt_data,
-                       const size_t       decrypt_data_size,
-                       const TEAN_KEY&    decrypt_key,
+std::string TeaDecrypt(const void*        data,
+                       const size_t       size,
+                       const TEAN_KEY&    key,
                        const TEAN_UL      delta,
                        const size_t       xtea_round);
 
 //! 分组数据加密，返回加密结果
-TEAN_DATA TeanEncipher(const TEAN_DATA&   encrypt_data,
-                       const TEAN_KEY&    key);
+TEAN_DATA TeanEncipher(const TEAN_DATA& data, const TEAN_KEY& key);
 
 //! 分组数据解密，返回解密结果
-TEAN_DATA TeanDecipher(const TEAN_DATA&   decrypt_data,
-                       const TEAN_KEY&    key);
+TEAN_DATA TeanDecipher(const TEAN_DATA& data, const TEAN_KEY& key);
 
 //! TEAN加密
 /*!
-  \param encrypt_data        需要加密的数据指针
-  \param encrypt_data_size   需要加密数据的长度 >=1
-  \param encrypt_key         参与加密数据的密钥
-  \return                       返回数据加密结果，当param2 < 1时，返回空串
+  \param data        需要加密的数据指针
+  \param size        需要加密的数据大小
+  \param key         参与加密数据的密钥
+  \return            返回数据加密结果
 
   \code
     string aa;
-    while(cin>>aa)
+    while(cin >> aa)
       {
-      auto v = TeanEncrypt(aa.c_str(),aa.size(),key);
+      auto v = TeanEncrypt(aa, key);
       cout << hex2show(v) << endl;
       }
   \endcode
 */
-std::string TeanEncrypt(const void*       encrypt_data,
-                        const size_t      encrypt_data_size,
-                        const TEAN_KEY&   encrypt_key);
+std::string TeanEncrypt(const void* data, const size_t size, const TEAN_KEY& key);
 
 //! TEAN解密
 /*!
-  \param decrypt_data        需要解密的数据指针
-  \param decrypt_data_size   需要解密数据的长度，>=16且%8==0
-  \param decrypt_key         参与解密数据的密钥
-  \return                       返回数据解密结果，当param2不符合要求或数据头错误时，返回空串
+  \param data        需要解密的数据指针
+  \param size        需要加密的数据大小(长度>=16且%8==0)
+  \param key         参与解密数据的密钥
+  \return            返回数据解密结果，当长度不符合要求或数据头错误时，返回空串
 
   \code
-    auto v = TeanDecrypt(aa.c_str(),aa.size(),key);
+    auto v = TeanDecrypt(aa, key);
     cout << hex2show(v);
   \endcode
 */
-std::string TeanDecrypt(const void*       decrypt_data,
-                        const size_t      decrypt_data_size,
-                        const TEAN_KEY&   decrypt_key);
+std::string TeanDecrypt(const void* data, const size_t size, const TEAN_KEY& key);
 
-std::string XTeanEncrypt(const void*        encrypt_data,
-                         const size_t       encrypt_data_size,
-                         const TEAN_KEY&    encrypt_key);
+std::string XTeanEncrypt(const void* data, const size_t size, const TEAN_KEY& key);
 
-std::string XTeanDecrypt(const void*        decrypt_data,
-                         const size_t       decrypt_data_size,
-                         const TEAN_KEY&    decrypt_key);
+std::string XTeanDecrypt(const void* data, const size_t size, const TEAN_KEY& key);
 
 //! XxTea算法使用的Word
-typedef unsigned long XXTEA_DATA;
+typedef uint32 XXTEA_DATA;
 
 //! XXTEA加密
 /*!
-  \param encrypt_data        需要加密的数据指针
-  \param encrypt_data_size   需要加密数据的长度，注意XXTEA需要长度为long的倍数
-  \param encrypt_key         参与加密数据的密钥
-  \return                       返回数据加密结果，当param2 < 4时，返回空串
+  \param data        需要加密的数据指针
+  \param size        需要加密的数据大小(注意XXTEA需要长度为int的倍数且>1，不成块部分则丢弃)
+  \param key         参与加密数据的密钥
+  \return            返回数据加密结果
 
   \code
     string aa;
-    while(cin>>aa)
+    while(cin >> aa)
       {
-      auto v = XxTeaEncrypt(aa.c_str(),aa.size(),key);
+      auto v = XxTeaEncrypt(aa, key);
       cout << hex2show(v) << endl;
       }
   \endcode
   */
-std::string XxTeaEncrypt(const void*        encrypt_data,
-                         const size_t       encrypt_data_size,
-                         const TEAN_KEY&    encrypt_key);
+std::string XxTeaEncrypt(const void* data, const size_t size, const TEAN_KEY& key);
+
 //! XXTEA解密
 /*!
-  \param decrypt_data        需要解密的数据指针
-  \param decrypt_data_size   需要解密数据的长度，注意XXTEA需要长度为long的倍数
-  \param decrypt_key         参与解密数据的密钥
-  \return                       返回数据解密结果，当param2 < 4时，返回空串
+  \param data        需要解密的数据指针
+  \param size        需要加密的数据大小(注意XXTEA需要长度为int的倍数且>1，不成块部分则不加入处理)
+  \param key         参与解密数据的密钥
+  \return            返回数据解密结果，当param2 < 4时，返回空串
 
   \code
-    auto v = XxTeaDecrypt(aa.c_str(),aa.size(),key);
+    auto v = XxTeaDecrypt(aa, key);
     cout << hex2show(v);
   \endcode
   */
-std::string XxTeaDecrypt(const void*        decrypt_data,
-                         const size_t       decrypt_data_size,
-                         const TEAN_KEY&    decrypt_key);
+std::string XxTeaDecrypt(const void* data, const size_t size, const TEAN_KEY& key);
 
 //////////////////////////////////////////////////////////////////////////
 template<typename T>
@@ -209,43 +202,45 @@ std::string TeaDecrypt(const std::basic_string<T>&    data,
   }
 
 template<typename T>
-std::string TeanEncrypt(const std::basic_string<T>&    data,
-                        const TEAN_KEY&                key)
+std::string TeanEncrypt(const std::basic_string<T>&   data,
+                        const TEAN_KEY&               key)
   {
   return TeanEncrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
-std::string TeanDecrypt(const std::basic_string<T>&    data,
-                        const TEAN_KEY&                key)
+std::string TeanDecrypt(const std::basic_string<T>&   data,
+                        const TEAN_KEY&               key)
   {
   return TeanDecrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
-std::string XTeanEncrypt(const std::basic_string<T>&    data,
-                         const TEAN_KEY&                key)
+std::string XTeanEncrypt(const std::basic_string<T>&  data,
+                         const TEAN_KEY&              key)
   {
   return XTeanEncrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
-std::string XTeanDecrypt(const std::basic_string<T>&    data,
-                         const TEAN_KEY&                key)
+std::string XTeanDecrypt(const std::basic_string<T>&  data,
+                         const TEAN_KEY&              key)
   {
   return XTeanDecrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
-std::string XxTeanEncrypt(const std::basic_string<T>&    data,
-                          const TEAN_KEY&                key)
+std::string XxTeaEncrypt(const std::basic_string<T>&  data,
+                          const TEAN_KEY&             key)
   {
-  return XxTeanEncrypt(data.c_str(), data.size() * sizeof(T), key);
+  return XxTeaEncrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
-std::string XxTeanDecrypt(const std::basic_string<T>&    data,
-                          const TEAN_KEY&                key)
+std::string XxTeaDecrypt(const std::basic_string<T>&  data,
+                          const TEAN_KEY&             key)
   {
-  return XxTeanDecrypt(data.c_str(), data.size() * sizeof(T), key);
+  return XxTeaDecrypt(data.c_str(), data.size() * sizeof(T), key);
   }
+
+#endif  // _XLIB_TEAN_H_

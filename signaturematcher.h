@@ -26,7 +26,7 @@
   - 引用串内的【换行】与【回车】请使用【\\r】、【\\n】。支持转义字符。
 
   \code
-  B8 "binsig_quote"  //相当于定位push XXXX,XXXX指向"binsig_quote"
+  B8 "binsig_quote"  //相当于定位push XXXX, XXXX指向"binsig_quote"
   \endcode
 
   \section Record 特征点
@@ -54,14 +54,14 @@
   - 范围指示不能重复使用
   - 范围最小为0，最大为MAX，x86下为0x7FFFFFFF，x64下为0x7FFFFFFF_FFFFFFFF
   - 范围指示必须为以下几种类型
-  - \b *      表示匹配范围从 0 到 MAX == {0,MAX} == {,}
-  - \b +      表示匹配范围从 1 到 MAX == {1,MAX} == {1,}
-  - \b ?      表示匹配范围从 0 到 1   == {0,1}   == {,1}
-  - \b {N,M}  表示匹配范围从 N 到 M
+  - \b *      表示匹配范围从 0 到 MAX == {0, MAX} == { , }
+  - \b +      表示匹配范围从 1 到 MAX == {1, MAX} == {1, }
+  - \b ?      表示匹配范围从 0 到 1   == {0, 1}   == {, 1}
+  - \b {N, M} 表示匹配范围从 N 到 M
   - \b {N}    表示匹配范围从 N 到 N
-  - \b {,M}   表示匹配范围从 0 到 M
-  - \b {N,}   表示匹配范围从 N 到 MAX
-  - \b {,}    表示匹配范围从 0 到 MAX  ==　*
+  - \b {, M}  表示匹配范围从 0 到 M
+  - \b {N, }  表示匹配范围从 N 到 MAX
+  - \b {, }   表示匹配范围从 0 到 MAX  ==　*
   - N与M间的分隔符允许为【,】【-】【~】【|】【:】，但一般为【,】
   - 注意N与M的不得超过范围,否则识别失败
   - 注意匹配模式是【非贪婪】的
@@ -121,9 +121,9 @@
   - 常量串允许通过操作符无限次连接，但请注意值冲突。
 
   \code
-  55 8BEC 83 10-20 //匹配push ebp\mov ebp,esp\sub esp,10-20
+  55 8BEC 83 10-20 //匹配push ebp\mov ebp, esp\sub esp, 10-20
   :A :B            //匹配A字符，匹配B字符，与'AB'同理
-  B9&R             //匹配mov r32,xxx
+  B9&R             //匹配mov r32, xxx
   \endcode
 
   \section Collecion 组合
@@ -188,7 +188,10 @@
   \endcode
 
 */
-#pragma once
+#ifndef _XLIB_SIGNATUREMATCHER_H_
+#define _XLIB_SIGNATUREMATCHER_H_
+
+#ifdef _WIN32
 
 #include "xline.h"
 #include "xblk.h"
@@ -297,3 +300,7 @@ namespace signaturematcher
   }
 
 #define binsig_find signaturematcher::find
+
+#endif  // _WIN32
+
+#endif  // _XLIB_SIGNATUREMATCHER_H_

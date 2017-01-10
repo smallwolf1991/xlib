@@ -4,16 +4,24 @@
 
   - bswap在开启完全优化情况下，会被编译成只有一条bswap的汇编指令
 
-  \version    1.0.1401.07
+  \version    2.0.1611.1410
   \note       For All
 
   \author     triones
   \date       2014-01-07
 */
-#pragma once
+#ifndef _XLIB_SWAP_H_
+#define _XLIB_SWAP_H_
 
 #include "xlib_base.h"
-#include <stdlib.h>
+
+#ifdef _WIN32
+#define bswap_16 _byteswap_ushort
+#define bswap_32 _byteswap_ulong
+#define bswap_64 _byteswap_uint64
+#else
+#include <byteswap.h>
+#endif
 
 //! bswap模板，是bswap函数的实现细节
 template<size_t N> inline void bswap_type(unsigned char* mem)
@@ -42,18 +50,18 @@ template<> inline void bswap_type<1>(unsigned char*)
   }
 template<> inline void bswap_type<2>(unsigned char* mem)
   {
-  unsigned short* lp = (unsigned short*)mem;
-  *lp = _byteswap_ushort(*lp);
+  uint16* lp = (uint16*)mem;
+  *lp = bswap_16(*lp);
   }
 template<> inline void bswap_type<4>(unsigned char* mem)
   {
-  unsigned long* lp = (unsigned long*)mem;
-  *lp = _byteswap_ulong(*lp);
+  uint32* lp = (uint32*)mem;
+  *lp = bswap_32(*lp);
   }
 template<> inline void bswap_type<8>(unsigned char* mem)
   {
-  unsigned __int64* lp = (unsigned __int64*)mem;
-  *lp = _byteswap_uint64(*lp);
+  uint64* lp = (uint64*)mem;
+  *lp = bswap_64(*lp);
   }
 
 //! 用于翻转数据。
@@ -82,10 +90,10 @@ template<typename T> inline T bswap(T const& values)
   \code
     void* a = 0x5;
     void* b = 0x1;
-    seqswap(a,b); //返回true，并且a == 1，b == 5
+    seqswap(a, b); //返回true，并且a == 1，b == 5
   \endcode
 */
-template<typename T> inline bool seqswap(T& a,T& b)
+template<typename T> inline bool seqswap(T& a, T& b)
   {
   if(a > b)
     {
@@ -96,7 +104,9 @@ template<typename T> inline bool seqswap(T& a,T& b)
     }
   return false;
   }
-template<> inline bool seqswap(void*& a,void*& b)
+template<> inline bool seqswap(void*& a, void*& b)
   {
-  return seqswap((unsigned char*&)a,(unsigned char*&)b);
+  return seqswap((unsigned char*&)a, (unsigned char*&)b);
   }
+
+#endif  // _XLIB_SWAP_H_

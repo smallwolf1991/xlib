@@ -1,83 +1,77 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="xlib_base.cpp">
-      <Filter>base\base</Filter>
-    </ClCompile>
-    <ClCompile Include="xlib_nt.cpp">
-      <Filter>base\nt</Filter>
-    </ClCompile>
-    <ClCompile Include="crc.cpp">
-      <Filter>algorithm\crc</Filter>
-    </ClCompile>
-    <ClCompile Include="xblk.cpp">
-      <Filter>memory\xblk</Filter>
-    </ClCompile>
-    <ClCompile Include="xevent.cpp">
-      <Filter>system_object\event</Filter>
-    </ClCompile>
-    <ClCompile Include="xrand.cpp">
-      <Filter>algorithm\xrand</Filter>
-    </ClCompile>
-    <ClCompile Include="xmutex.cpp">
-      <Filter>system_object\mutex</Filter>
-    </ClCompile>
-    <ClCompile Include="ws_s.cpp">
-      <Filter>string\ws&amp;s</Filter>
-    </ClCompile>
-    <ClCompile Include="ws_utf8.cpp">
-      <Filter>string\ws&amp;utf8</Filter>
-    </ClCompile>
-    <ClCompile Include="xmsg.cpp">
-      <Filter>string\xmsg</Filter>
-    </ClCompile>
-    <ClCompile Include="xlog.cpp">
-      <Filter>string\xlog</Filter>
-    </ClCompile>
-    <ClCompile Include="hex_str.cpp">
-      <Filter>string\hex&amp;str</Filter>
-    </ClCompile>
-    <ClCompile Include="md5.cpp">
-      <Filter>algorithm\md5</Filter>
-    </ClCompile>
-    <ClCompile Include="tean.cpp">
-      <Filter>algorithm\tean</Filter>
-    </ClCompile>
-    <ClCompile Include="aes.cpp">
+    <ClCompile Include="aes.cc">
       <Filter>algorithm\aes</Filter>
     </ClCompile>
-    <ClCompile Include="pe.cpp">
+    <ClCompile Include="crc.cc">
+      <Filter>algorithm\crc</Filter>
+    </ClCompile>
+    <ClCompile Include="des.cc">
+      <Filter>algorithm\des</Filter>
+    </ClCompile>
+    <ClCompile Include="md5.cc">
+      <Filter>algorithm\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="xrand.cc">
+      <Filter>algorithm\xrand</Filter>
+    </ClCompile>
+    <ClCompile Include="tean.cc">
+      <Filter>algorithm\tean</Filter>
+    </ClCompile>
+    <ClCompile Include="xlib_base.cc">
+      <Filter>base\base</Filter>
+    </ClCompile>
+    <ClCompile Include="xlib_nt.cc">
+      <Filter>base\nt</Filter>
+    </ClCompile>
+    <ClCompile Include="pe.cc">
       <Filter>file\pe</Filter>
     </ClCompile>
-    <ClCompile Include="hook.cpp">
-      <Filter>memory\hook</Filter>
-    </ClCompile>
-    <ClCompile Include="xWSA.cpp">
-      <Filter>sock\wsa</Filter>
-    </ClCompile>
-    <ClCompile Include="Critical.cpp">
-      <Filter>system_object\critical</Filter>
-    </ClCompile>
-    <ClCompile Include="xSock.cpp">
-      <Filter>sock\xsock</Filter>
-    </ClCompile>
-    <ClCompile Include="xNetDl.cpp">
-      <Filter>sock\netdl</Filter>
-    </ClCompile>
-    <ClCompile Include="syssnap.cpp">
-      <Filter>system_object\syssnap</Filter>
-    </ClCompile>
-    <ClCompile Include="caller.cpp">
+    <ClCompile Include="caller.cc">
       <Filter>memory\caller</Filter>
     </ClCompile>
-    <ClCompile Include="xServer.cpp">
-      <Filter>sock\xserver</Filter>
+    <ClCompile Include="hook.cc">
+      <Filter>memory\hook</Filter>
     </ClCompile>
-    <ClCompile Include="signaturematcher.cpp">
+    <ClCompile Include="xblk.cc">
+      <Filter>memory\xblk</Filter>
+    </ClCompile>
+    <ClCompile Include="xSock.cc">
+      <Filter>sock\xsock</Filter>
+    </ClCompile>
+    <ClCompile Include="hex_str.cc">
+      <Filter>string\hex&amp;str</Filter>
+    </ClCompile>
+    <ClCompile Include="ws_s.cc">
+      <Filter>string\ws&amp;s</Filter>
+    </ClCompile>
+    <ClCompile Include="ws_utf8.cc">
+      <Filter>string\ws&amp;utf8</Filter>
+    </ClCompile>
+    <ClCompile Include="xmsg.cc">
+      <Filter>string\xmsg</Filter>
+    </ClCompile>
+    <ClCompile Include="swap.cc">
+      <Filter>memory\swap</Filter>
+    </ClCompile>
+    <ClCompile Include="xlib_test.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="xlog.cc">
+      <Filter>string\xlog</Filter>
+    </ClCompile>
+    <ClCompile Include="xline.cc">
+      <Filter>container\xline</Filter>
+    </ClCompile>
+    <ClCompile Include="syssnap.cc">
+      <Filter>system_object\syssnap</Filter>
+    </ClCompile>
+    <ClCompile Include="signaturematcher.cc">
       <Filter>algorithm\signaturematcher</Filter>
     </ClCompile>
-    <ClCompile Include="des.cpp">
-      <Filter>algorithm\des</Filter>
+    <ClCompile Include="xevent.cc">
+      <Filter>system_object\event</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,14 +103,8 @@
     <ClInclude Include="syssnap.h">
       <Filter>system_object\syssnap</Filter>
     </ClInclude>
-    <ClInclude Include="xmutex.h">
-      <Filter>system_object\mutex</Filter>
-    </ClInclude>
     <ClInclude Include="xevent.h">
       <Filter>system_object\event</Filter>
-    </ClInclude>
-    <ClInclude Include="Critical.h">
-      <Filter>system_object\critical</Filter>
     </ClInclude>
     <ClInclude Include="xmsg.h">
       <Filter>string\xmsg</Filter>
@@ -132,15 +120,6 @@
     </ClInclude>
     <ClInclude Include="xSock.h">
       <Filter>sock\xsock</Filter>
-    </ClInclude>
-    <ClInclude Include="xWSA.h">
-      <Filter>sock\wsa</Filter>
-    </ClInclude>
-    <ClInclude Include="xServer.h">
-      <Filter>sock\xserver</Filter>
-    </ClInclude>
-    <ClInclude Include="xNetDl.h">
-      <Filter>sock\netdl</Filter>
     </ClInclude>
     <ClInclude Include="xblk.h">
       <Filter>memory\xblk</Filter>
@@ -183,6 +162,9 @@
     </ClInclude>
     <ClInclude Include="xrand.h">
       <Filter>algorithm\xrand</Filter>
+    </ClInclude>
+    <ClInclude Include="xlib_test.h">
+      <Filter>test</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -234,9 +216,6 @@
     <Filter Include="algorithm\xrand">
       <UniqueIdentifier>{bb6d2e77-88b7-4ddd-9d15-db96aa0a2baf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="system_object\mutex">
-      <UniqueIdentifier>{fbde3038-806e-44d8-afb4-81564ba341ed}</UniqueIdentifier>
-    </Filter>
     <Filter Include="string">
       <UniqueIdentifier>{9bbd615f-5fbd-43cf-8d4a-d71d58244908}</UniqueIdentifier>
     </Filter>
@@ -279,17 +258,8 @@
     <Filter Include="sock">
       <UniqueIdentifier>{0df31281-fe3b-4287-873a-04be4abb162c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sock\wsa">
-      <UniqueIdentifier>{807f9f52-cc05-45c6-84f9-583eeb2ee5b9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="system_object\critical">
-      <UniqueIdentifier>{89766bc3-93fd-45e3-a4fa-6bfaf18c462f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sock\xsock">
       <UniqueIdentifier>{37441eb5-6472-4b5e-bd41-ccc915d3d5c0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sock\netdl">
-      <UniqueIdentifier>{89deb95b-e67b-4d3e-b2f5-a92dc112d630}</UniqueIdentifier>
     </Filter>
     <Filter Include="system_object\syssnap">
       <UniqueIdentifier>{56a03ee7-947a-45da-8cea-a3ead8333c12}</UniqueIdentifier>
@@ -297,14 +267,14 @@
     <Filter Include="memory\caller">
       <UniqueIdentifier>{1a4da387-ed61-43fd-b939-a85bc1430722}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sock\xserver">
-      <UniqueIdentifier>{ee046c90-e93e-4b4e-abb7-676807c5878f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="algorithm\signaturematcher">
       <UniqueIdentifier>{cf1c0af7-d4be-4eaa-944c-60378ba766ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="algorithm\des">
       <UniqueIdentifier>{6df2143e-aa01-43f3-a9dd-e700b4c64905}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{88d56bd2-5eee-4922-b5c9-60e3b7ad5e57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

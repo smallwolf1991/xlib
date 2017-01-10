@@ -4,8 +4,11 @@ MT0
 MT3
 MTd3
 x64
+test
 *.sdf
 *.opensdf
+*.exe
+*.pdb
 doc
 
 \mk_svn.bat

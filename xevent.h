@@ -8,8 +8,10 @@
   \author     triones
   \date       2013-03-01
 */
+#ifndef _XLIB_XEVENT_H_
+#define _XLIB_XEVENT_H_
 
-#pragma once
+#ifdef _WIN32
 
 #include "xlib_base.h"
 
@@ -58,4 +60,8 @@ class xevent
     const HANDLE handle;
   };
 
-#endif  //#ifdef FOR_RING0
+#endif  // FOR_RING0
+
+#endif  // _WIN32
+
+#endif  // _XLIB_XEVENT_H_

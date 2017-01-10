@@ -19,24 +19,27 @@
   \author     triones
   \date       2011-04-25
 */
-#pragma once
+#ifndef _XLIB_CALLER_H_
+#define _XLIB_CALLER_H_
 
 #include "xlib_base.h"
 
-#pragma warning(disable:4244) //! warning C4244: 可能丢失数据。应用于__int64转换
+#ifdef _WIN32
+
+#pragma warning(disable:4244) // warning C4244: 可能丢失数据。应用于__int64转换
 
 #ifndef _WIN64
 typedef unsigned __int8 CallerArgType;
 const CallerArgType arg_nul = 0;
-const CallerArgType arg_eax = (1<<0);
-const CallerArgType arg_ecx = (1<<1);
-const CallerArgType arg_edx = (1<<2);
-const CallerArgType arg_ebx = (1<<3);
-//const CallerArgType arg_esp = (1<<4);  //ESP不能被用作传参
-const CallerArgType arg_ebp = (1<<5);
-const CallerArgType arg_esi = (1<<6);
-const CallerArgType arg_edi = (1<<7);
-#else           //#ifndef _WIN64
+const CallerArgType arg_eax = (1 << 0);
+const CallerArgType arg_ecx = (1 << 1);
+const CallerArgType arg_edx = (1 << 2);
+const CallerArgType arg_ebx = (1 << 3);
+//const CallerArgType arg_esp = (1 << 4);  //ESP不能被用作传参
+const CallerArgType arg_ebp = (1 << 5);
+const CallerArgType arg_esi = (1 << 6);
+const CallerArgType arg_edi = (1 << 7);
+#else  // _WIN64
 typedef unsigned __int16 CallerArgType;
 const CallerArgType arg_nul = 0;
 const CallerArgType arg_rcx = (1 << 0);   //注意这样的设计才能使得传参顺序正确
@@ -56,18 +59,25 @@ const CallerArgType arg_r13 = (1 << 13);
 const CallerArgType arg_r14 = (1 << 14);
 const CallerArgType arg_r15 = (1 << 15);
 const CallerArgType arg_x64 = arg_rcx | arg_rdx | arg_r8 | arg_r9;
-#endif          //#ifndef _WIN64
+#endif  // _WIN64
 
 /*!
 
   \code
-    caller tst(functions);  tst(...);            //纯函数调用
-    caller tst(functions,0,0,0,0x10);  tst(...); //纯函数调用，但扩展堆栈0x08+0x10==0x18
-    caller tst(functions,this); tst(...);        //纯this调用，this在初始化时传入
-    caller tst(functions); tst[this](...);       //纯this调用，this在调用时指定
-    caller tst(0xXXXX,this);  tst(...);          //纯this虚函数调用
-    caller tst(functions,0,0,arg_eax);  tst(eax_value,...);//普通调用，使用eax传递参数
-    caller tst(functions,0,0,arg_eax|arg_esi);  tst(eax_value,esi_value,...);//普通调用，使用eax与esi传递参数(寄存器传参时，请注意顺序按照eax、ecx、edx...的顺序先后传递)
+    caller tst(functions);
+    tst(...);                                   // 纯函数调用
+    caller tst(functions, 0, 0, 0, 0x10);
+    tst(...);                                   // 纯函数调用，但扩展堆栈0x08+0x10==0x18
+    caller tst(functions, this);
+    tst(...);                                   // 纯this调用，this在初始化时传入
+    caller tst(functions);
+    tst[this](...);                             // 纯this调用，this在调用时指定
+    caller tst(0xXXXX, this);
+    tst(...);                                   // 纯this虚函数调用
+    caller tst(functions, 0, 0, arg_eax);
+    tst(eax_value, ...);                        // 普通调用，使用eax传递参数
+    caller tst(functions, 0, 0, arg_eax | arg_esi);
+    tst(eax_value, esi_value, ...);             // 普通调用，使用eax与esi传递参数(寄存器传参时，请注意顺序按照eax、ecx、edx...的顺序先后传递)
   \endcode
 */
 class caller
@@ -95,7 +105,7 @@ class caller
 #endif
       const intptr_t        expandargc    = 0)
       {
-      init((void*)func_vtno,lp_this,this_regs,reg_s,expandargc);
+      init((void*)func_vtno, lp_this, this_regs, reg_s, expandargc);
       }
   public:
     //! 移植fakevtcall(x86大约需要0xB0空间、x64大约需要0x120空间)
@@ -108,7 +118,7 @@ class caller
 #ifdef FOR_RING0
     //! Ring0下用于回收资源
     static void freecallobj();
-#endif  // FOR_RING0
+#endif
 
   protected:
     //! 初始化函数
@@ -133,7 +143,7 @@ class caller
     //! 允许fakecall函数访问私有成员
 #ifdef __INTEL_COMPILER
     friend unsigned __int64 fakecall(const caller* nowthis, void* argv);
-#endif
+#endif                               // __INTEL_COMPILER
   private:
     void*             caller_func;        //!< 函数地址，用以调用函数
     void*             caller_this;        //!< 对象指针，用以确定对象
@@ -141,3 +151,7 @@ class caller
     CallerArgType     caller_regs;        //!< 寄存器传参指示
     unsigned __int8   caller_argc;        //!< 参数个数
   };
+
+#endif  // _WIN32
+
+#endif  // _XLIB_CALLER_H_

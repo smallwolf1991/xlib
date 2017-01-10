@@ -8,8 +8,10 @@
   \author     triones
   \date       2012-07-20
 */
+#ifndef _XLIB_PE_H_
+#define _XLIB_PE_H_
 
-#pragma once
+#ifdef _WIN32
 
 #include "xblk.h"
 
@@ -33,3 +35,7 @@ class pe
   private:
     HMODULE _hMod;
   };
+
+#endif  // _WIN32
+
+#endif  // _XLIB_PE_H_

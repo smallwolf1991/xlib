@@ -41,12 +41,19 @@
       <Configuration>MTd3</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="test|Win32">
+      <Configuration>test</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="test|x64">
+      <Configuration>test</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes.h" />
     <ClInclude Include="caller.h" />
     <ClInclude Include="crc.h" />
-    <ClInclude Include="Critical.h" />
     <ClInclude Include="des.h" />
     <ClInclude Include="hex_str.h" />
     <ClInclude Include="hook.h" />
@@ -69,45 +76,40 @@
     <ClInclude Include="swap.h" />
     <ClInclude Include="xlib_struct_ring0.h" />
     <ClInclude Include="xlib_struct_ring3.h" />
+    <ClInclude Include="xlib_test.h" />
     <ClInclude Include="xline.h" />
     <ClInclude Include="xlog.h" />
     <ClInclude Include="xmsg.h" />
-    <ClInclude Include="xmutex.h" />
-    <ClInclude Include="xNetDl.h" />
     <ClInclude Include="xrand.h" />
-    <ClInclude Include="xServer.h" />
     <ClInclude Include="xSock.h" />
-    <ClInclude Include="xWSA.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="aes.cpp" />
-    <ClCompile Include="caller.cpp" />
-    <ClCompile Include="crc.cpp" />
-    <ClCompile Include="Critical.cpp" />
-    <ClCompile Include="des.cpp" />
-    <ClCompile Include="hex_str.cpp" />
-    <ClCompile Include="hook.cpp">
+    <ClCompile Include="aes.cc" />
+    <ClCompile Include="caller.cc" />
+    <ClCompile Include="crc.cc" />
+    <ClCompile Include="des.cc" />
+    <ClCompile Include="hex_str.cc" />
+    <ClCompile Include="hook.cc">
       <UseMSVC Condition="'$(Configuration)|$(Platform)'=='MD3|x64'">false</UseMSVC>
     </ClCompile>
-    <ClCompile Include="md5.cpp" />
-    <ClCompile Include="pe.cpp" />
-    <ClCompile Include="signaturematcher.cpp" />
-    <ClCompile Include="syssnap.cpp" />
-    <ClCompile Include="tean.cpp" />
-    <ClCompile Include="ws_s.cpp" />
-    <ClCompile Include="ws_utf8.cpp" />
-    <ClCompile Include="xblk.cpp" />
-    <ClCompile Include="xevent.cpp" />
-    <ClCompile Include="xlib_base.cpp" />
-    <ClCompile Include="xlib_nt.cpp" />
-    <ClCompile Include="xlog.cpp" />
-    <ClCompile Include="xmsg.cpp" />
-    <ClCompile Include="xmutex.cpp" />
-    <ClCompile Include="xNetDl.cpp" />
-    <ClCompile Include="xrand.cpp" />
-    <ClCompile Include="xServer.cpp" />
-    <ClCompile Include="xSock.cpp" />
-    <ClCompile Include="xWSA.cpp" />
+    <ClCompile Include="md5.cc" />
+    <ClCompile Include="pe.cc" />
+    <ClCompile Include="signaturematcher.cc" />
+    <ClCompile Include="swap.cc" />
+    <ClCompile Include="syssnap.cc" />
+    <ClCompile Include="tean.cc" />
+    <ClCompile Include="ws_s.cc" />
+    <ClCompile Include="ws_utf8.cc" />
+    <ClCompile Include="xblk.cc" />
+    <ClCompile Include="xevent.cc" />
+    <ClCompile Include="xlib_base.cc" />
+    <ClCompile Include="xlib_nt.cc" />
+    <ClCompile Include="xlib_test.cc" />
+    <ClCompile Include="xline.cc" />
+    <ClCompile Include="xlog.cc" />
+    <ClCompile Include="xmsg.cc" />
+    <ClCompile Include="xrand.cc" />
+    <ClCompile Include="xSock.cc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="updatelog.h" />
@@ -140,8 +142,23 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MT3|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <InterproceduralOptimization>true</InterproceduralOptimization>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -202,7 +219,13 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MT3|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='test|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MT3|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='test|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MT0|Win32'" Label="PropertySheets">
@@ -246,9 +269,19 @@
     <OutDir>.\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test|Win32'">
+    <OutDir>.\</OutDir>
+    <TargetName>$(ProjectName)_$(Configuration)</TargetName>
+    <TargetExt>.exe</TargetExt>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MT3|x64'">
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <OutDir>.\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test|x64'">
+    <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
+    <OutDir>.\</OutDir>
+    <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MTd3|Win32'">
     <OutDir>.\</OutDir>
@@ -374,6 +407,43 @@
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='test|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;XLIB_ALREADY_LINK;_XLIB_TEST_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAsManaged>false</CompileAsManaged>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <CreateHotpatchableImage>false</CreateHotpatchableImage>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <OpenMPSupport>false</OpenMPSupport>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <Cpp0xSupport>false</Cpp0xSupport>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MT3|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -409,6 +479,41 @@
       </IgnoreSpecificDefaultLibraries>
     </Lib>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='test|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN64;NDEBUG;_LIB;XLIB_ALREADY_LINK;_XLIB_TEST_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAsManaged>false</CompileAsManaged>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <CreateHotpatchableImage>false</CreateHotpatchableImage>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <OpenMPSupport>false</OpenMPSupport>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MT0|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -435,6 +540,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>SgiSTL_ForRing0;$(WindowsSdkDir)Include\km;$(WindowsSdkDir)Include\km\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>StdCall</CallingConvention>
+      <DisableSpecificWarnings>4127</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -480,6 +586,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>SgiSTL_ForRing0;$(WindowsSdkDir)Include\km;$(WindowsSdkDir)Include\km\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>StdCall</CallingConvention>
+      <DisableSpecificWarnings>4127</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

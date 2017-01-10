@@ -2,22 +2,26 @@
   \file  md5.h
   \brief md5.h定义了md5算法
 
-  \version    1.2.1607.2015
+  \version    2.0.1612.1614
   \note       For All
 
   \author     triones
   \date       2013-01-04
 */
-#pragma once
+#ifndef _XLIB_MD5_H_
+#define _XLIB_MD5_H_
 
-#include "xlib_base.h"
 #include <string>
 
-typedef unsigned char    MD5_BYTE;
-typedef unsigned long    MD5_DWORD;
+#include "xlib_base.h"
 
+typedef uint8   MD5_BYTE;
+typedef uint32  MD5_DWORD;
+
+#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable:4201)   //warning C4201: 使用了非标准扩展 : 无名称的结构/联合
+#endif
 //! MD5值是一个128位的散列值，由四个32位分组级联组成
 class MD5_VALUE
   {
@@ -42,20 +46,22 @@ class MD5_VALUE
       MD5_BYTE Data[sizeof(MD5_DWORD) * 4];
       };
   };
+#ifdef _WIN32
 #pragma warning(pop)
+#endif
 
 //! md5算法
 /*!
-  \param in data  需要加密的数据指针
-  \param in size  需要加密数据的长度
-  \return         返回md5结果
+  \param data   需要加密的数据指针
+  \param size   需要加密的数据大小
+  \return       返回md5结果
 
   \code
     string aa;
-    while(cin>>aa)
+    while(cin >> aa)
       {
-      auto v = md5((unsigned char*)aa.c_str(),aa.size());
-      cout << hex2str((unsigned char*)&v, sizeof(v)) << endl;
+      auto v = md5(aa);
+      cout << hex2str(string(v)) << endl;
       }
     //MD5 ("") = d41d8cd98f00b204e9800998ecf8427e
 　　//MD5 ("a") = 0cc175b9c0f1b6a831c399e269772661
@@ -73,3 +79,5 @@ template<typename T> MD5_VALUE md5(const std::basic_string<T>& s)
   {
   return md5(s.c_str(), s.size() * sizeof(T));
   }
+
+#endif  // _XLIB_MD5_H_

@@ -8,8 +8,10 @@
   \author     triones
   \date       2012-05-18
 */
+#ifndef _XLIB_NT_H_
+#define _XLIB_NT_H_
 
-#pragma once
+#ifdef _WIN32
 
 #include "xlib_base.h"
 
@@ -47,7 +49,7 @@ XLIB_EXTERNC NTSTATUS XLIB_NTAPI ZwProtectVirtualMemory(
 //20120906 1127
 XLIB_EXTERNC LPCSTR XLIB_NTAPI PsGetProcessImageFileName(PEPROCESS Process);
 
-#else //#ifdef FOR_RING0
+#else   // FOR_RING0
 
 //! 以下函数Ring0下导出，Ring3下未导出。函数定义来自于Ring0
 
@@ -104,4 +106,9 @@ NTSTATUS XLIB_NTAPI ZwQueryObject(
   _In_ ULONG                    ObjectInformationLength,
   _Out_opt_ PULONG              ReturnLength
   );
-#endif  //#ifdef FOR_RING0
+
+#endif  // FOR_RING0
+
+#endif  // _WIN32
+
+#endif  // _XLIB_NT_H_

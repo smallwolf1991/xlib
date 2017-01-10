@@ -2,32 +2,34 @@
   \file  hex_str.h
   \brief hex_str.h定义了hex与str的转换操作
 
-  \version    7.3.1408.1310
+  \version    9.0.1701.0316
   \note       For All
 
   \author     triones
   \date       2010-03-03
 */
-
-#pragma once
+#ifndef _XLIB_HEX_STR_H_
+#define _XLIB_HEX_STR_H_
 
 #include <string>
+
+#include "xlib_base.h"
 
 //! 十六进制值的结构体
 /*!
   主要体现BYTE与十六进制字符间的关系
 
   \code
-    HEX_VALUE_STRUCT hexs = {1,4};  //hexs为字符'A'
+    HEX_VALUE_STRUCT hexs = {1, 4};  //hexs为字符'A'
   \endcode
 */
-#pragma pack (push,1)
+# pragma pack (push, 1)
 struct HEX_VALUE_STRUCT
   {
   unsigned char low:    4;
   unsigned char high:   4;
   };
-#pragma pack (pop)
+# pragma pack (pop)
 
 //! 十六进制ASCII表现形式的结构体
 struct HEX_ASCII_STRUCT
@@ -39,58 +41,24 @@ struct HEX_ASCII_STRUCT
 //! 一个byte所需的ASCII长度
 const size_t gk_str2byte_len  = sizeof(HEX_ASCII_STRUCT);
 //! 一个word所需的ASCII长度
-const size_t gk_str2word_len  = gk_str2byte_len * sizeof(unsigned __int16);
+const size_t gk_str2word_len  = gk_str2byte_len * sizeof(uint16);
 //! 一个dword所需的ASCII长度
-const size_t gk_str2dword_len = gk_str2byte_len * sizeof(unsigned __int32);
+const size_t gk_str2dword_len = gk_str2byte_len * sizeof(uint32);
 //! 一个qword所需的ASCII长度
-const size_t gk_str2qword_len = gk_str2byte_len * sizeof(unsigned __int64);
+const size_t gk_str2qword_len = gk_str2byte_len * sizeof(uint64);
 
-//! 指定HEX串转换为ASCII格式(版本一)
+//! 指定HEX串转换为ASCII格式
 /*!
-  可选大小写，默认小写\n
-  注意dest不能与hexs同位置，这样将导致转换错误\n
-  最后追加结尾0\n
-  \param  dest      目标缓冲区
-  \param  hexs      源HEX串
-  \param  destlen   目标缓冲区长度。 < 0 表示缓冲区足够\n
-                    注意destlen >= (hexslen * 2 + 1)
-  \param  hexslen   源HEX串长度。< 0 视hexs为C格式串。
-  \param  isup      指定转换后的ASCII大小写，默认小写
-  \return           返回转换后的长度，包括结尾0。\n
-                    返回0表示转换错误。
-
-  \code
-    cout << "result len:" << hex2str(dest,"\xAB\xCD\xEF");
-      //将输出result len:7，并且dest == "abcdef"
-  \endcode
-*/
-size_t  hex2str(char*           dest,
-                const void*     hexs,
-                const size_t    destlen = -1,
-                const size_t    hexslen = -1,
-                const bool      isup    = false);
-
-//! 指定HEX串转换为ASCII格式(版本二)
-/*!
-  可选大小写，默认小写。最后追加结尾0\n
   \param  hexs      源HEX串
   \param  isup      指定转换后的ASCII大小写，默认小写
   \return           返回转换后的ascii串对象
 
   \code
-    string asc = hex2str(hexstring((unsigned char*)"\xAB\xCD\xEF"));
-    if(asc.empty())
-      {
-      cout << "转换失败！";
-      }
-    else
-      {
-      cout << "hex2str:" << asc; //将输出"abcdef"
-      }
+    string asc = hex2str(string("\xAB\xCD\xEF"));
+    cout << "hex2str:" << asc << endl; //将输出"abcdef"
   \endcode
   */
-std::string hex2str(const std::basic_string<unsigned char>& hexs, const bool isup = false);
-std::string hex2str(const std::basic_string<char>& hexs, const bool isup = false);
+std::string hex2str(const std::string& hexs, const bool isup = false);
 
 //! 指定十六进制ASCII串转换为HEX值
 /*!
@@ -108,13 +76,13 @@ std::string hex2str(const std::basic_string<char>& hexs, const bool isup = false
 
   \code
     unsigned int readlen = 0;
-    const unsigned int hexvalue = str2hex("12345678",readlen);
+    const unsigned int hexvalue = str2hex("12345678", readlen);
     //返回hexvalue == 0x12345678; readlen == 8;
-    const unsigned int hexvalue = str2hex("1234 56|78",readlen);
+    const unsigned int hexvalue = str2hex("1234 56|78", readlen);
     //返回hexvalue == 0x12345678; readlen == 10;
-    const unsigned int hexvalue = str2hex("1234 56|78",readlen,8,true);
+    const unsigned int hexvalue = str2hex("1234 56|78", readlen, 8, true);
     //返回hexvalue == 0; readlen == 0;
-    const unsigned int hexvalue = str2hex("1234 56|78",readlen,8,false,ture);
+    const unsigned int hexvalue = str2hex("1234 56|78", readlen, 8, false, ture);
     //返回hexvalue == 0x1234; readlen == 4;
   \endcode
 */
@@ -149,7 +117,7 @@ std::string str2hexs(const std::string&  strs,
     \0、\a、\b、\f、\n、\r、\t、\v、\\、\'、\"、\?
   \endcode
   另可转义\x########。
-  \x识别十六进制数据时，根据读取长度，自动匹配类型(2:byte,4:short,8:int)
+  \x识别十六进制数据时，根据读取长度，自动匹配类型(2:byte, 4:short, 8:int)
   \param    strs    源ASCII串(转换字串最大长度为0xFFFF)
   \return           返回转换后的ascii串对象
 */
@@ -161,35 +129,37 @@ enum Hex2showCode
   HC_UNICODE  = 1,
   HC_UTF8     = 2,
   };
+
 //! 指定hex串，格式化显示
 /*!
   \param  data      hex串
-  \param  size      hex串长度
-  \param  code      指明内容编码
+  \param  code      指明内容编码（默认HC_ASCII）
   \param  isup      hex格式大小写控制
   \param  prews     前缀空格数
   \return           格式化后的内容
 
   \code
 
-    char aa[] = "123456789aasdfsdhcf";
-    cout << hex2show(aa,sizeof(aa));
+    string ss = "123456789aasdfsdhcf";
+    cout << hex2show(ss) << endl;
     //0012FF54┃31 32 33 34|35 36 37 38|39 61 61 73|64 66 73 64┃123456789aasdfsd
     //0012FF64┃68 63 66 00|           |           |           ┃hcf.
   \endcode
-*/
-std::string hex2show(const void*           data,
-                     intptr_t              size,
-                     const size_t          prews = 0,
-                     const Hex2showCode    code = HC_ASCII,
-                     const bool            isup = true);
+  */
+std::string hex2show(const void*            data,
+                     const size_t           size,
+                     const Hex2showCode     code,
+                     const bool             isup,
+                     const size_t           prews);
 
-//! 模版　指定hex串，格式化显示
-template<typename T>
-std::string hex2show(const std::basic_string<T>& s,
-                     const size_t                prews = 0,
-                     const Hex2showCode          code = HC_ASCII,
-                     const bool                  isup = true)
-  {
-  return hex2show(s.c_str(), s.size() * sizeof(T), prews, code, isup);
-  }
+std::string hex2show(const std::string&     data,
+                     const Hex2showCode     code,
+                     const bool             isup,
+                     const size_t           prews);
+
+std::string hex2show(const std::string& data);
+std::string hex2show(const std::string& data, const Hex2showCode code);
+std::string hex2show(const std::string& data, const bool isup);
+std::string hex2show(const std::string& data, const size_t prews); // 需要强制类型哦
+
+#endif  // _XLIB_HEX_STR_H_
