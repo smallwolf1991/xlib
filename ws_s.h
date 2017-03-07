@@ -33,8 +33,9 @@ const charucs2_t snull = L'\0';
 
 //! UNICODE串转换ASCII串
 /*!
-  \param  ws  需要转换的UNICODE串
-  \return     转换后的对应ASCII串对象
+  \param  ws    需要转换的UNICODE串
+  \param  size  需要转换的UNICODE串的长度(以宽字计)
+  \return       转换后的对应ASCII串对象
 
   \code
     #include "ws_s.h"
@@ -49,12 +50,14 @@ const charucs2_t snull = L'\0';
       }
   \endcode
 */
+std::string ws2s(const charucs2_t* const ws, const size_t size);
 std::string ws2s(const ucs2string& ws);
 
 //! ASCII串转换UNICODE串
 /*!
-  \param  s   需要转换的ASCII串
-  \return     转换后的对应UNICODE串对象
+  \param  s     需要转换的ASCII串
+  \param  size  需要转换的ASCII串的长度
+  \return       转换后的对应UNICODE串对象
 
   \code
     #include "ws_s.h"
@@ -68,7 +71,8 @@ std::string ws2s(const ucs2string& ws);
       wcout << L"转换结果：" << ws;
       }
   \endcode
-*/
+  */
+ucs2string s2ws(const char* const s, const size_t size);
 ucs2string s2ws(const std::string& s);
 
 #ifndef _WIN32

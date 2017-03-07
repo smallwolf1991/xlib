@@ -23,10 +23,10 @@ class DesKey
   public:
     /*!
     指定key串。8 byte （64 bit）\n
-    当len == 0时，视key为0结尾的ASCII字符串\n
+    当size == 0时，视key为0结尾的ASCII字符串\n
     如果数据不足，其后以0补充
     */
-    DesKey(const void* key, size_t len = 0);
+    DesKey(const void* key, size_t size = 0);
   public:
     unsigned char _key[64 / 8];
   };
@@ -52,7 +52,7 @@ std::string DesEncrypt(const void* data, const size_t size, const DesKey& key);
 //! DES解密
 /*!
   \param data   需要解密的数据指针
-  \param size   需要加密的数据大小（需要128 bit对齐，不足部分则不加入处理）
+  \param size   需要解密的数据大小（需要128 bit对齐，不足部分则不加入处理）
   \param key    参与解密数据的密钥
   \return       返回数据解密结果
 

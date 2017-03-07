@@ -12,8 +12,6 @@
 
 #if defined(_WIN32) && !defined(FOR_RING0)
 
-#include "xlib_def.h"
-
 //20120518 1201
 typedef LONG NTSTATUS;
 
@@ -250,6 +248,6 @@ typedef struct _VM_COUNTERS
   } VM_COUNTERS;
 typedef VM_COUNTERS *PVM_COUNTERS;
 
-#endif  // _WIN32 FOR_RING0
+#endif  // _WIN32 !FOR_RING0
 
 #endif  // _XLIB_STRUCT_RING3_H_

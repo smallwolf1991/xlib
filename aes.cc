@@ -4,16 +4,16 @@
 
 using std::string;
 
-AesKey::AesKey(const void* key, size_t len)
+AesKey::AesKey(const void* key, size_t size)
   {
   memset(_key, 0, sizeof(_key));
-  if(len == 0)
+  if(size == 0)
     {
     const char* k = (const char*)key;
-    while(k[len] != '\0') ++len;
+    while(k[size] != '\0') ++size;
     }
-  if(len > sizeof(_key))  len = sizeof(_key);
-  memcpy(_key, key, len);
+  if(size > sizeof(_key))  size = sizeof(_key);
+  memcpy(_key, key, size);
   }
 
 //! AES置换表
@@ -77,7 +77,6 @@ static const unsigned char expand_key_round_const[expand_key_size] =
   {
   0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
   };
-
 
 //! 非线性字节替代
 static void SubstituteBytes(unsigned char data[bytes_row_size][bytes_columns_size])

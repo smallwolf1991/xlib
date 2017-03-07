@@ -30,7 +30,7 @@
 
 #include "xlib_base.h"
 
-typedef uint32  TEAN_UL;  //!< TEAN算法使用32bit
+typedef uint32  TEAN_WORD;  //!< TEAN算法使用32bit
 
 #ifdef _WIN32
 #pragma warning(push)
@@ -41,7 +41,7 @@ class TEAN_DATA
   {
   public:
     TEAN_DATA();
-    TEAN_DATA(const TEAN_UL a, const TEAN_UL b);
+    TEAN_DATA(const TEAN_WORD a, const TEAN_WORD b);
     TEAN_DATA(const void* datas);
     operator std::string();
   public:
@@ -49,10 +49,10 @@ class TEAN_DATA
       {
       struct
         {
-        TEAN_UL A;
-        TEAN_UL B;
+        TEAN_WORD A;
+        TEAN_WORD B;
         };
-      unsigned char Data[sizeof(TEAN_UL) * 2];
+      unsigned char Data[sizeof(TEAN_WORD) * 2];
       };
   };
 
@@ -61,22 +61,22 @@ class TEAN_KEY
   {
   public:
     TEAN_KEY();
-    TEAN_KEY(const TEAN_UL k1,
-             const TEAN_UL k2,
-             const TEAN_UL k3,
-             const TEAN_UL k4);
+    TEAN_KEY(const TEAN_WORD k1,
+             const TEAN_WORD k2,
+             const TEAN_WORD k3,
+             const TEAN_WORD k4);
     TEAN_KEY(const void* key);
   public:
     union
       {
       struct
         {
-        TEAN_UL K1;
-        TEAN_UL K2;
-        TEAN_UL K3;
-        TEAN_UL K4;
+        TEAN_WORD K1;
+        TEAN_WORD K2;
+        TEAN_WORD K3;
+        TEAN_WORD K4;
         };
-      unsigned char Key[sizeof(TEAN_UL) * 4];
+      unsigned char Key[sizeof(TEAN_WORD) * 4];
       };
   };
 #ifdef _WIN32
@@ -85,24 +85,24 @@ class TEAN_KEY
 
 TEAN_DATA TeaEncipher(const TEAN_DATA&    data,
                       const TEAN_KEY&     key,
-                      const TEAN_UL       delta,
+                      const TEAN_WORD     delta,
                       const size_t        xtea_round);
 
 TEAN_DATA TeaDecipher(const TEAN_DATA&    data,
                       const TEAN_KEY&     key,
-                      const TEAN_UL       delta,
+                      const TEAN_WORD     delta,
                       const size_t        xtea_round);
 
 std::string TeaEncrypt(const void*        data,
                        const size_t       size,
                        const TEAN_KEY&    key,
-                       const TEAN_UL      delta,
+                       const TEAN_WORD      delta,
                        const size_t       xtea_round);
 
 std::string TeaDecrypt(const void*        data,
                        const size_t       size,
                        const TEAN_KEY&    key,
-                       const TEAN_UL      delta,
+                       const TEAN_WORD    delta,
                        const size_t       xtea_round);
 
 //! 分组数据加密，返回加密结果
@@ -123,7 +123,7 @@ TEAN_DATA TeanDecipher(const TEAN_DATA& data, const TEAN_KEY& key);
     while(cin >> aa)
       {
       auto v = TeanEncrypt(aa, key);
-      cout << hex2show(v) << endl;
+      cout << hex2show(v);
       }
   \endcode
 */
@@ -186,7 +186,7 @@ std::string XxTeaDecrypt(const void* data, const size_t size, const TEAN_KEY& ke
 template<typename T>
 std::string TeaEncrypt(const std::basic_string<T>&    data,
                        const TEAN_KEY&                key,
-                       const TEAN_UL                  delta,
+                       const TEAN_WORD                delta,
                        const size_t                   xtea_round)
   {
   return TeaEncrypt(data.c_str(), data.size() * sizeof(T), key, delta, xtea_round);
@@ -195,7 +195,7 @@ std::string TeaEncrypt(const std::basic_string<T>&    data,
 template<typename T>
 std::string TeaDecrypt(const std::basic_string<T>&    data,
                        const TEAN_KEY&                key,
-                       const TEAN_UL                  delta,
+                       const TEAN_WORD                delta,
                        const size_t                   xtea_round)
   {
   return TeaDecrypt(data.c_str(), data.size() * sizeof(T), key, delta, xtea_round);
@@ -231,14 +231,14 @@ std::string XTeanDecrypt(const std::basic_string<T>&  data,
 
 template<typename T>
 std::string XxTeaEncrypt(const std::basic_string<T>&  data,
-                          const TEAN_KEY&             key)
+                         const TEAN_KEY&              key)
   {
   return XxTeaEncrypt(data.c_str(), data.size() * sizeof(T), key);
   }
 
 template<typename T>
 std::string XxTeaDecrypt(const std::basic_string<T>&  data,
-                          const TEAN_KEY&             key)
+                         const TEAN_KEY&              key)
   {
   return XxTeaDecrypt(data.c_str(), data.size() * sizeof(T), key);
   }

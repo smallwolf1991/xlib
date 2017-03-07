@@ -13,14 +13,15 @@ static const char* const gk_NumFmt_Low  = "0123456789abcdef";
 //! 十六进制转换，大写索引
 static const char* const gk_NumFmt_Up   = "0123456789ABCDEF";
 
-string hex2str(const string& hexs, const bool isup)
+string hex2str(const void* hexs, const size_t size, bool isup)
   {
   string asc;
+  if(hexs == nullptr || size == 0)  return asc;
   const auto fmt = isup ? gk_NumFmt_Up : gk_NumFmt_Low;
 
-  for(auto ch : hexs)
+  for(size_t i = 0; i < size; ++i)
     {
-    const HEX_VALUE_STRUCT* hexchar = (const HEX_VALUE_STRUCT*)&ch;
+    const HEX_VALUE_STRUCT* hexchar = (const HEX_VALUE_STRUCT*)((size_t)hexs + i);
     asc.push_back(fmt[hexchar->high]);
     asc.push_back(fmt[hexchar->low]);
     }
@@ -28,11 +29,12 @@ string hex2str(const string& hexs, const bool isup)
   return asc;
   }
 
-size_t str2hex(const string&       strs,
-               size_t*             lpreadlen,
-               size_t              wantlen,
-               const bool          errexit,
-               const bool          errbreak)
+size_t str2hex(const void*    strs,
+               const size_t   size,
+               size_t*        lpreadlen,
+               size_t         wantlen,
+               const bool     errexit,
+               const bool     errbreak)
   {
   size_t values = 0;
   size_t readlen = 0;
@@ -40,7 +42,9 @@ size_t str2hex(const string&       strs,
   if(lpreadlen == nullptr) lpreadlen = &readlen;
   *lpreadlen = 0;
 
-#ifndef _WIN64
+  if(strs == nullptr || size == 0)  return 0;
+
+#if !defined(_WIN64) && !defined(__amd64)
   const auto wl = gk_str2dword_len;
 #else
   const auto wl = gk_str2qword_len;
@@ -48,8 +52,10 @@ size_t str2hex(const string&       strs,
 
   if((wantlen == 0) || (wantlen > wl))    wantlen = wl;
 
-  for(const auto& ch : strs)
+  const char* lp = (const char*)strs;
+  for(size_t i = 0; i < size; ++i)
     {
+    const char ch = lp[i];
     char tmpC = ch & 0xF;
     switch(ch)
       {
@@ -88,10 +94,11 @@ size_t str2hex(const string&       strs,
   return values;
   }
 
-string str2hexs(const string&       strs,
-                size_t*             lpreadlen,
-                const bool          errexit,
-                const bool          errbreak)
+string str2hexs(const void*   strs,
+                const size_t  size,
+                size_t*       lpreadlen,
+                const bool    errexit,
+                const bool    errbreak)
   {
   string rets;
 
@@ -99,13 +106,16 @@ string str2hexs(const string&       strs,
   if(lpreadlen == nullptr) lpreadlen = &readlen;
   *lpreadlen = 0;
 
+  if(strs == nullptr || size == 0)  return 0;
+
   bool pick_high = true;      //指示当前提取的是高位还是低位
   unsigned char readch = 0;   //存放临时的提取值
   size_t realreadlen = 0;     //存放实际读取数
 
-
-  for(const auto& ch : strs)
+  const char* lp = (const char*)strs;
+  for(size_t i = 0; i < size; ++i)
     {
+    const char ch = lp[i];
     char tmpC = ch & 0xF;
     switch(ch)
       {
@@ -128,7 +138,7 @@ string str2hexs(const string&       strs,
           {
           readch = (readch & 0xF0) + tmpC;
           rets.push_back(readch);
-          realreadlen = (*(lpreadlen)) + 1;
+          realreadlen = *(lpreadlen) + 1;
           }
         pick_high = !pick_high;
         break;
@@ -157,18 +167,19 @@ string str2hexs(const string&       strs,
   return rets;
   }
 
-string escape(const string& strs)
+string escape(const void* strs, const size_t size)
   {
+  const char* lp = (const char*)strs;
   string msg;
-  for(size_t i = 0; i < strs.size(); ++i)
+  for(size_t i = 0; i < size; ++i)
     {
-    if(strs[i] != '\\')
+    if(lp[i] != '\\')
       {
-      msg.push_back(strs[i]);
+      msg.push_back(lp[i]);
       continue;
       }
 
-    switch(strs[++i])
+    switch(lp[++i])
       {
       case '0':   msg.push_back('\0');  break;
       case 'a':   msg.push_back('\a');  break;
@@ -187,7 +198,7 @@ string escape(const string& strs)
         {
         ++i;
         size_t readlen = 0;
-        size_t tmpI = str2hex(&strs[i], &readlen, 0, false, true);
+        size_t tmpI = str2hex((void*)&lp[i], 1, &readlen, 0, false, true);
         switch(readlen)
           {
           case 0:msg.push_back('x');break;
@@ -195,7 +206,7 @@ string escape(const string& strs)
           case 2:msg.append((const char*)&tmpI, sizeof(uint8));break;
           case 3:
           case 4:msg.append((const char*)&tmpI, sizeof(uint16)); break;
-#ifndef _WIN64
+#if !defined(_WIN64) && !defined(__amd64)
           default:msg.append((const char*)&tmpI, sizeof(uint32));break;
 #else
           case 5: case 6: case 7: case 8:
@@ -209,7 +220,7 @@ string escape(const string& strs)
         break;
       default:
         msg.push_back('\\');
-        msg.push_back(strs[i]);
+        msg.push_back(lp[i]);
       }
     }
   return msg;
@@ -290,11 +301,11 @@ static bool hex2show_unicode_visualization(xmsg& msg, const charucs2_t wc)
   }
 
 //! 注意会修改传入的usechar
-static void hex2show_unicode(xmsg&                  msg,
-                             const unsigned char*   data,
-                             const intptr_t         fix_len,
-                             const bool             last,
-                             size_t&                usechar)
+static void hex2show_unicode(xmsg&                msg,
+                             const unsigned char* data,
+                             const intptr_t       fix_len,
+                             const bool           last,
+                             size_t&              usechar)
   {
 
   intptr_t lp = 0;
@@ -326,11 +337,11 @@ static void hex2show_unicode(xmsg&                  msg,
   }
 
 //! 注意会修改传入的usechar
-static void hex2show_utf8(xmsg&                  msg,
-                          const unsigned char*   data,
-                          const intptr_t         fix_len,
-                          const bool             last,
-                          size_t&                usechar)
+static void hex2show_utf8(xmsg&                 msg,
+                          const unsigned char*  data,
+                          const intptr_t        fix_len,
+                          const bool            last,
+                          size_t&               usechar)
   {
   intptr_t lp = 0;
 
@@ -380,11 +391,11 @@ static void hex2show_utf8(xmsg&                  msg,
   if(lp > fix_len)  usechar = lp - fix_len;
   }
 
-static void hex2show_ascii(xmsg&                  msg,
-                           const unsigned char*   data,
-                           const intptr_t         fix_len,
-                           const bool             last,
-                           size_t&                usechar)
+static void hex2show_ascii(xmsg&                msg,
+                           const unsigned char* data,
+                           const intptr_t       fix_len,
+                           const bool           last,
+                           size_t&              usechar)
   {
   intptr_t lp = 0;
 
@@ -439,11 +450,11 @@ static void hex2show_ascii(xmsg&                  msg,
   if(lp > fix_len)  usechar = lp - fix_len;
   }
 
-string hex2show(const void*            data,
-                const size_t           len,
-                const Hex2showCode     code,
-                const bool             isup,
-                const size_t           prews)
+string hex2show(const void*         data,
+                const size_t        len,
+                const Hex2showCode  code,
+                const bool          isup,
+                const size_t        prews)
   {
   xmsg msg;
   const char* fmt = isup ? gk_NumFmt_Up : gk_NumFmt_Low;
@@ -490,34 +501,6 @@ string hex2show(const void*            data,
     }while(size > 0);
 
   return msg;
-  }
-
-string hex2show(const string&          data,
-                const Hex2showCode     code,
-                const bool             isup,
-                const size_t           prews)
-  {
-  return hex2show(data.c_str(), data.size(), code, isup, prews);
-  }
-
-string hex2show(const string& data)
-  {
-  return hex2show(data.c_str(), data.size(), HC_ASCII, true, 0);
-  }
-
-string hex2show(const string& data, const Hex2showCode code)
-  {
-  return hex2show(data, code, true, 0);
-  }
-  
-string hex2show(const string& data, const bool isup)
-  {
-  return hex2show(data, HC_ASCII, isup, 0);
-  }
-  
-string hex2show(const string& data, const size_t prews)
-  {
-  return hex2show(data, HC_ASCII, true, prews);
   }
 
 #ifdef _XLIB_TEST_

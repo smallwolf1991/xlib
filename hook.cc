@@ -1693,7 +1693,7 @@ static string MakeExpression(const char* exp)
     }
   //再判定是不是常量值，如果是，也返回
   size_t readlen = 0;
-  size_t value = str2hex(exp, &readlen, 0, true);
+  size_t value = str2hex(string(exp), &readlen, 0, true);
   if(readlen != 0)
     {
     return MakeValueCode(value);

@@ -36,7 +36,7 @@ MD5_VALUE::operator string()
 
 
 //! 主循环有四轮，一轮16次，二轮16次，三轮16次，四轮16次
-static const size_t gk_md5_step = 16 + 16 + 16 +16;
+static const size_t gk_md5_step = 16 + 16 + 16 + 16;
 
 //! 每次计算使用的常数ti，ti = floor(abs(sin(1...64) * 2^32);
 static const MD5_DWORD gk_md5_ti[gk_md5_step] =
@@ -234,7 +234,6 @@ MD5_VALUE md5(const void* data, const size_t size)
 
   return mcv;
   }
-
 
 #ifdef _XLIB_TEST_
 

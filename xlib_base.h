@@ -21,6 +21,8 @@
 #include <stdlib.h>
 
 #include "xlib_link.h"
+#include "xlib_def.h"
+
 #include "xlib_test.h"
 
 #ifdef _WIN32
@@ -73,7 +75,6 @@ void  __cdecl operator delete[](void* mem);
 
 #else   // _WIN32
 
-#include "xlib_def.h"
 #define XLIB_TRY     try
 #define XLIB_CATCH   catch(...)
 

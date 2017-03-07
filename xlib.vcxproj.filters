@@ -26,7 +26,7 @@
       <Filter>base\nt</Filter>
     </ClCompile>
     <ClCompile Include="pe.cc">
-      <Filter>file\pe</Filter>
+      <Filter>memory\pe</Filter>
     </ClCompile>
     <ClCompile Include="caller.cc">
       <Filter>memory\caller</Filter>
@@ -68,7 +68,7 @@
       <Filter>system_object\syssnap</Filter>
     </ClCompile>
     <ClCompile Include="signaturematcher.cc">
-      <Filter>algorithm\signaturematcher</Filter>
+      <Filter>memory\signaturematcher</Filter>
     </ClCompile>
     <ClCompile Include="xevent.cc">
       <Filter>system_object\event</Filter>
@@ -86,7 +86,7 @@
       <Filter>algorithm\crc</Filter>
     </ClInclude>
     <ClInclude Include="signaturematcher.h">
-      <Filter>algorithm\signaturematcher</Filter>
+      <Filter>memory\signaturematcher</Filter>
     </ClInclude>
     <ClInclude Include="des.h">
       <Filter>algorithm\des</Filter>
@@ -128,7 +128,7 @@
       <Filter>memory\swap</Filter>
     </ClInclude>
     <ClInclude Include="pe.h">
-      <Filter>file\pe</Filter>
+      <Filter>memory\pe</Filter>
     </ClInclude>
     <ClInclude Include="xline.h">
       <Filter>container\xline</Filter>
@@ -246,12 +246,6 @@
     <Filter Include="algorithm\aes">
       <UniqueIdentifier>{bfac8a0d-9fa3-4b2e-921b-fbd2e8e8418b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="file">
-      <UniqueIdentifier>{ed730f1d-3bff-444d-aa01-9c2a9272f1d3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="file\pe">
-      <UniqueIdentifier>{f2594172-a826-4a11-9c26-70ffb1a30b24}</UniqueIdentifier>
-    </Filter>
     <Filter Include="memory\hook">
       <UniqueIdentifier>{d07ea045-deba-4191-99a6-1849ddb999bc}</UniqueIdentifier>
     </Filter>
@@ -267,14 +261,17 @@
     <Filter Include="memory\caller">
       <UniqueIdentifier>{1a4da387-ed61-43fd-b939-a85bc1430722}</UniqueIdentifier>
     </Filter>
-    <Filter Include="algorithm\signaturematcher">
-      <UniqueIdentifier>{cf1c0af7-d4be-4eaa-944c-60378ba766ef}</UniqueIdentifier>
-    </Filter>
     <Filter Include="algorithm\des">
       <UniqueIdentifier>{6df2143e-aa01-43f3-a9dd-e700b4c64905}</UniqueIdentifier>
     </Filter>
     <Filter Include="test">
       <UniqueIdentifier>{88d56bd2-5eee-4922-b5c9-60e3b7ad5e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="memory\signaturematcher">
+      <UniqueIdentifier>{cf1c0af7-d4be-4eaa-944c-60378ba766ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="memory\pe">
+      <UniqueIdentifier>{f2594172-a826-4a11-9c26-70ffb1a30b24}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

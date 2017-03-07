@@ -52,8 +52,8 @@ class MD5_VALUE
 
 //! md5算法
 /*!
-  \param data   需要加密的数据指针
-  \param size   需要加密的数据大小
+  \param data   需要计算MD5的数据指针
+  \param size   需要计算MD5的数据大小
   \return       返回md5结果
 
   \code

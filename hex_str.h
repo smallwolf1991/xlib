@@ -23,13 +23,13 @@
     HEX_VALUE_STRUCT hexs = {1, 4};  //hexs为字符'A'
   \endcode
 */
-# pragma pack (push, 1)
+#pragma pack (push, 1)
 struct HEX_VALUE_STRUCT
   {
   unsigned char low:    4;
   unsigned char high:   4;
   };
-# pragma pack (pop)
+#pragma pack (pop)
 
 //! 十六进制ASCII表现形式的结构体
 struct HEX_ASCII_STRUCT
@@ -49,20 +49,22 @@ const size_t gk_str2qword_len = gk_str2byte_len * sizeof(uint64);
 
 //! 指定HEX串转换为ASCII格式
 /*!
-  \param  hexs      源HEX串
-  \param  isup      指定转换后的ASCII大小写，默认小写
-  \return           返回转换后的ascii串对象
+  \param  hexs  源HEX串
+  \param  size  源HEX串大小
+  \param  isup  指定转换后的ASCII大小写，默认小写
+  \return       返回转换后的ascii串对象
 
   \code
     string asc = hex2str(string("\xAB\xCD\xEF"));
     cout << "hex2str:" << asc << endl; //将输出"abcdef"
   \endcode
-  */
-std::string hex2str(const std::string& hexs, const bool isup = false);
+*/
+std::string hex2str(const void* hexs, const size_t size, bool isup = false);
 
 //! 指定十六进制ASCII串转换为HEX值
 /*!
   \param  strs      源ASCII串
+  \param  size      源ASCII串大小
   \param  lpreadlen 成功读取ASCII串时，返回读取的字符个数。\n
                     lpreadlen可以为nullptr，此时不返回结果。\n
                     转换失败，*lpreadlen == 0。
@@ -86,16 +88,18 @@ std::string hex2str(const std::string& hexs, const bool isup = false);
     //返回hexvalue == 0x1234; readlen == 4;
   \endcode
 */
-size_t str2hex(const std::string&  strs,
-               size_t*             lpreadlen = nullptr,
-               size_t              wantlen   = 0,
-               const bool          errexit   = false,
-               const bool          errbreak  = false);
+size_t str2hex(const void*    strs,
+               const size_t   size,
+               size_t*        lpreadlen = nullptr,
+               size_t         wantlen   = 0,
+               const bool     errexit   = false,
+               const bool     errbreak  = false);
 
 //! 指定十六进制ASCII串转换为HEX串
 /*!
   转换ASCII的十六进制字符应成对的，如最后字符不成对，将忽略最后不成对的字符
   \param  strs      源ASCII串
+  \param  size      源ASCII串大小
   \param  lpreadlen 成功读取ASCII串时，返回读取的字符个数。\n
                     lpreadlen可以为nullptr，此时不返回结果。\n
                     转换失败，*lpreadlen == 0。
@@ -105,10 +109,11 @@ size_t str2hex(const std::string&  strs,
   \return           成功转换则为十六进制ASCII串对应的HEX值。\n
                     判定转换失败，应该通过lpreadlen的返回结果判定。
 */
-std::string str2hexs(const std::string&  strs,
-                     size_t*             lpreadlen = nullptr,
-                     const bool          errexit = false,
-                     const bool          errbreak = false);
+std::string str2hexs(const void*    strs,
+                     const size_t   size,
+                     size_t*        lpreadlen  = nullptr,
+                     const bool     errexit    = false,
+                     const bool     errbreak   = false);
 
 //! 指定ASCII串，分析转义字符
 /*!
@@ -119,9 +124,10 @@ std::string str2hexs(const std::string&  strs,
   另可转义\x########。
   \x识别十六进制数据时，根据读取长度，自动匹配类型(2:byte, 4:short, 8:int)
   \param    strs    源ASCII串(转换字串最大长度为0xFFFF)
+  \param    strs    源ASCII串大小
   \return           返回转换后的ascii串对象
 */
-std::string escape(const std::string& strs);
+std::string escape(const void* strs, const size_t size);
 
 enum Hex2showCode
   {
@@ -146,20 +152,96 @@ enum Hex2showCode
     //0012FF64┃68 63 66 00|           |           |           ┃hcf.
   \endcode
   */
-std::string hex2show(const void*            data,
-                     const size_t           size,
-                     const Hex2showCode     code,
-                     const bool             isup,
-                     const size_t           prews);
+std::string hex2show(const void*        data,
+                     const size_t       size,
+                     const Hex2showCode code  = HC_ASCII,
+                     const bool         isup  = true,
+                     const size_t       prews = 0);
 
-std::string hex2show(const std::string&     data,
-                     const Hex2showCode     code,
-                     const bool             isup,
-                     const size_t           prews);
+//////////////////////////////////////////////////////////////////////////
 
-std::string hex2show(const std::string& data);
-std::string hex2show(const std::string& data, const Hex2showCode code);
-std::string hex2show(const std::string& data, const bool isup);
-std::string hex2show(const std::string& data, const size_t prews); // 需要强制类型哦
+template<typename T>
+std::string hex2str(const std::basic_string<T>& hexs,
+                    const bool                  isup = false)
+  {
+  return hex2str((void*)hexs.c_str(), hexs.size() * sizeof(T), isup);
+  }
+
+template<typename T>
+size_t str2hex(const std::basic_string<T>&  strs,
+               size_t*                      lpreadlen = nullptr,
+               size_t                       wantlen = 0,
+               const bool                   errexit = false,
+               const bool                   errbreak = false)
+  {
+  return str2hex((void*)strs.c_str(),
+                 strs.size() * sizeof(T),
+                 lpreadlen,
+                 wantlen,
+                 errexit,
+                 errbreak);
+  }
+
+template<typename T>
+std::string str2hexs(const std::basic_string<T>&  strs,
+                     size_t*                      lpreadlen = nullptr,
+                     const bool                   errexit = false,
+                     const bool                   errbreak = false)
+  {
+  return str2hexs((void*)strs.c_str(),
+                  strs.size() * sizeof(T),
+                  lpreadlen,
+                  errexit,
+                  errbreak);
+  }
+
+template<typename T>
+std::string escape(const std::basic_string<T>&  strs)
+  {
+  return escape((void*)strs.c_str(), strs.size() * sizeof(T));
+  }
+
+template<typename T>
+std::string hex2show(const std::basic_string<T>&  data,
+                     const Hex2showCode           code,
+                     const bool                   isup,
+                     const size_t                 prews)
+  {
+  return hex2show((void*)data.c_str(),
+                  data.size() * sizeof(T),
+                  code, isup, prews);
+  }
+
+template<typename T>
+std::string hex2show(const std::basic_string<T>&  data)
+  {
+  return hex2show((void*)data.c_str(),
+                  data.size() * sizeof(T),
+                  HC_ASCII, true, 0);
+  }
+
+template<typename T>
+std::string hex2show(const std::basic_string<T>&  data, const Hex2showCode code)
+  {
+  return hex2show((void*)data.c_str(),
+                  data.size() * sizeof(T),
+                  code, true, 0);
+  }
+
+template<typename T>
+std::string hex2show(const std::basic_string<T>&  data, const bool isup)
+  {
+  return hex2show((void*)data.c_str(),
+                  data.size() * sizeof(T),
+                  HC_ASCII, isup, 0);
+  }
+
+template<typename T>
+std::string hex2show(const std::basic_string<T>&  data, const size_t prews) // 需要强制类型哦
+  {
+  return hex2show((void*)data.c_str(),
+                  data.size() * sizeof(T),
+                  HC_ASCII, true, prews);
+  }
 
 #endif  // _XLIB_HEX_STR_H_

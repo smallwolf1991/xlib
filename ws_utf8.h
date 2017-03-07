@@ -20,6 +20,7 @@
 
 typedef unsigned char*                    p_utf8;
 typedef std::basic_string<unsigned char>  xutf8;
+typedef const unsigned char*              pc_utf8;
 
 /*!
   转换一个unicode字符为一个utf8字符
@@ -35,12 +36,13 @@ xutf8 unicode_byte2utf8_byte(const unsigned long unicode);
   \return             返回读取utf8字节数，返回0表示失败
 */
 size_t utf8_byte2unicode_byte(unsigned long*  unicode,
-                              const p_utf8    utf8);
+                              pc_utf8 const   utf8);
 
 //! UNICODE串转换UTF8串
 /*!
-  \param    ws  需要转换的UNICODE串
-  \return       转换后的对应UTF8串对象
+  \param    ws    需要转换的UNICODE串
+  \param    size  需要转换的UNICODE串长度（以宽字计）
+  \return         转换后的对应UTF8串对象
 
   \code
     auto s(ws2utf8(L"文字"));
@@ -49,14 +51,17 @@ size_t utf8_byte2unicode_byte(unsigned long*  unicode,
       cout << "ws2utf8转换出错，LastError：" << GetLastError();
       }
   \endcode
-*/
+  */
+xutf8 ws2utf8(const charucs2_t* const ws, const size_t size);
 xutf8 ws2utf8(const ucs2string& ws);
 
 //! UTF8串转换UNICODE串
 /*!
   \param    utf8  需要转换的UTF8串
+  \param    size  需要转换的UTF8串
   \return         转换后的对应UNICODE串对象
 */
+ucs2string utf82ws(pc_utf8 const utf8, const size_t size);
 ucs2string utf82ws(const xutf8& utf8);
 
 #endif  // _XLIB_WS_UTF8_H_

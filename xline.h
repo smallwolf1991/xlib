@@ -41,9 +41,14 @@ class xline : public std::basic_string<unsigned char>
     typedef std::basic_string<unsigned char>          _Mybase;
   public:
     /*========================  数据输入  ========================*/
-    _Myt& operator<<(void* str)
+    /*!
+      \code
+        line << (void*)p;
+      \endcode
+    */
+    _Myt& operator<<(void* p)
       {
-      return this->operator<<((size_t)str);
+      return this->operator<<((size_t)p);
       }
     /*!
       格式串输入\n
@@ -104,7 +109,7 @@ class xline : public std::basic_string<unsigned char>
     */
     template<typename T> _Myt& operator<<(const std::basic_string<T>& s)
       {
-      _Mybase::append((const unsigned char*)s.c_str(), s.size());
+      _Mybase::append((const unsigned char*)s.c_str(), s.size() * sizeof(T));
 
       return *this;
       }
@@ -143,12 +148,12 @@ class xline : public std::basic_string<unsigned char>
     /*========================  数据输出  ========================*/
     /*!
       \code
-        line >> (void*)xx;
+        line >> (void*)p;
       \endcode
     */
-    _Myt& operator>>(void*& v)
+    _Myt& operator>>(void*& p)
       {
-      return this->operator>>((size_t&)v);
+      return this->operator>>((size_t&)p);
       }
     /*!
       格式串输出，注意不能特化void* !\n
@@ -191,7 +196,7 @@ class xline : public std::basic_string<unsigned char>
       前两个操作将直接导致nline数据内容全部复制\n
       本操作复制的数据长度取决于缓冲区当前short数据\n
       它们与本操作在操作结果：缓冲长度、缓冲内容上都有区别！\n
-      注意：当操作自身时，相当于丢弃数据头
+      注意：当操作自身时，按数据头长度截断
 
       \code
         line >> tmpline;
@@ -203,8 +208,6 @@ class xline : public std::basic_string<unsigned char>
       headtype xlen;
       this->operator>>(xlen);
 
-      if(&nline == this)  return *this;
-
       size_type nlen = xlen;
       nlen -= (otherhead ? sizeof(headtype) : 0);
 
@@ -215,13 +218,20 @@ class xline : public std::basic_string<unsigned char>
         }
 #endif
 
+      if(&nline == this)
+        {
+        auto it = _Mybase::begin() + nlen;
+        _Mybase::erase(it, _Mybase::end());
+        return *this;
+        }
+
       nline.assign(_Mybase::c_str(), nlen);
       _Mybase::erase(0, nlen);
 
       return *this;
       }
     /*!
-      模板适用于标准库字符串
+      模板适用于标准库字符串。数据倾倒
 
       \code
         string aa;
@@ -230,7 +240,7 @@ class xline : public std::basic_string<unsigned char>
     */
     template<typename T> _Myt& operator>>(std::basic_string<T>& s)
       {
-      s.assign((const char*)_Mybase::c_str(), _Mybase::size());
+      s.assign((const T*)_Mybase::c_str(), _Mybase::size() / sizeof(T));
       _Mybase::clear();
 
       return *this;

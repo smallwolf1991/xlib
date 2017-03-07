@@ -12,8 +12,6 @@
 
 #if defined(_WIN32) && defined(FOR_RING0)
 
-#include "xlib_def.h"
-
 //20120906 1115
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
   WORD   e_magic;                     // Magic number

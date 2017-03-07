@@ -21,21 +21,20 @@
 #ifndef _XLIB_H_
 #define _XLIB_H_
 
+#include "xlib_def.h"           //-20161114   locked        base/def
+#include "xlib_link.h"          //-20161114   locked        base/link
 #include "xlib_base.h"          //+20161114   locked        base/base
+//          xlib_def.h
 //          xlib_link.h
 //          xlib_struct.h
 //          xlib_struct_ring0.h
 //          xlib_struct_ring3.h
 //          xlib_test.h
-#include "xlib_def.h"           //-20161114   locked        base/def
-#include "xlib_link.h"          //-20161114   locked        base/link
-#include "xlib_struct.h"        //-20161114   open          base/struct
-//          xlib_def.h
 #include "xlib_struct_ring0.h"  //-20161114   open          base/struct
-//          xlib_def.h
 #include "xlib_struct_ring3.h"  //-20161114   open          base/struct
-//          xlib_def.h
-#include "xlib_test.h"          //+20161114   open          base/test
+#include "xlib_struct.h"        //-20161114   open          base/struct
+
+#include "xlib_test.h"          //+20161114   open          test
 
 //以下文件都默认包含xlib_base.h
 #include "xlib_nt.h"            //+20161114   open          base/nt
@@ -69,7 +68,7 @@
 #include "syssnap.h"            //+20140219   to add        system_object/syssnap
 //          xline.h
 //              xlib_nt.h
-#include "pe.h"                 //+20160721   to add        file/pe
+#include "pe.h"                 //+20160721   to add        memory/pe
 //          xblk.h
 //              ws_s.h
 //              syssnap.h
@@ -89,7 +88,7 @@
 #include "caller.h"             //+20150721   locked        memory/caller
 //              hook.h
 //              xevent.h
-#include "signaturematcher.h"   //+20160406   check         algorithm/signaturematcher
+#include "signaturematcher.h"   //+20160406   check         memory/signaturematcher
 //          xline.h
 //          xblk.h
 //              xlog.h

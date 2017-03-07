@@ -12,8 +12,6 @@
 
 #ifdef _WIN32
 
-#include "xlib_def.h"
-
 //系统信息结构枚举  20100820 1635  20120526
 //http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/System%20Information/SYSTEM_INFORMATION_CLASS.html
 //http://msdn.microsoft.com/en-us/library/windows/desktop/ms724509(v=vs.85).aspx

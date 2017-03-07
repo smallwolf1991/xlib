@@ -72,7 +72,7 @@ xutf8 unicode_byte2utf8_byte(const unsigned long unicode)
 #endif
 
 size_t utf8_byte2unicode_byte(unsigned long*  unicode,
-                              const p_utf8    utf8)
+                              pc_utf8 const   utf8)
   {
   if(utf8 == nullptr)  return 0;
   unsigned long tu;
@@ -114,13 +114,14 @@ size_t utf8_byte2unicode_byte(unsigned long*  unicode,
   return 0;
   }
 
-xutf8 ws2utf8(const ucs2string& ws)
+xutf8 ws2utf8(const charucs2_t* const ws, const size_t size)
   {
   xutf8 utf8;
+  if(ws == nullptr || size == 0)  return utf8;
 
-  for(auto ch : ws)
+  for(size_t i = 0; i < size; ++i)
     {
-    const auto k = unicode_byte2utf8_byte(ch);
+    const auto k = unicode_byte2utf8_byte(ws[i]);
     if(k.empty())
       {
       utf8.clear();
@@ -132,14 +133,20 @@ xutf8 ws2utf8(const ucs2string& ws)
   return utf8;
   }
 
-ucs2string utf82ws(const xutf8& utf8)
+xutf8 ws2utf8(const ucs2string& ws)
+  {
+  return ws2utf8(ws.c_str(), ws.size());
+  }
+
+ucs2string utf82ws(pc_utf8 const utf8, const size_t size)
   {
   ucs2string ws;
+  if(utf8 == nullptr || size == 0)  return ws;
 
-  const p_utf8 pu = (const p_utf8)utf8.c_str();
+  pc_utf8 pu = utf8;
   unsigned long ch;
 
-  for(size_t i = 0; i < utf8.size();)
+  for(size_t i = 0; i < size;)
     {
     const size_t k = utf8_byte2unicode_byte(&ch, &pu[i]);
     if(k == 0)
@@ -149,12 +156,17 @@ ucs2string utf82ws(const xutf8& utf8)
       }
 
     i += k;
-    if(i > utf8.size())  break;
+    if(i > size)  break;
 
     ws.push_back((charucs2_t)ch);
     }
 
   return ws;
+  }
+
+ucs2string utf82ws(const xutf8& utf8)
+  {
+  return utf82ws(utf8.c_str(), utf8.size());
   }
 
 #ifdef _XLIB_TEST_

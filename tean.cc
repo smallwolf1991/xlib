@@ -10,7 +10,7 @@ TEAN_DATA::TEAN_DATA()
   {
   }
 
-TEAN_DATA::TEAN_DATA(const TEAN_UL a, const TEAN_UL b)
+TEAN_DATA::TEAN_DATA(const TEAN_WORD a, const TEAN_WORD b)
 :A(a), B(b)
   {
   }
@@ -31,10 +31,10 @@ TEAN_KEY::TEAN_KEY()
   {
   }
 
-TEAN_KEY::TEAN_KEY(const TEAN_UL k1,
-                   const TEAN_UL k2,
-                   const TEAN_UL k3,
-                   const TEAN_UL k4)
+TEAN_KEY::TEAN_KEY(const TEAN_WORD k1,
+                   const TEAN_WORD k2,
+                   const TEAN_WORD k3,
+                   const TEAN_WORD k4)
 :K1(k1), K2(k2), K3(k3), K4(k4)
   {
   }
@@ -45,8 +45,8 @@ TEAN_KEY::TEAN_KEY(const void* key)
   }
 
 //! 魔术常量 == 实数部分(2^32 * 黄金比例ψ)。ψ == sqrt(5/4) - 1/2 ≈ 0.618034;
-static const TEAN_UL gk_tean_delta = 0x9E3779B9;
-static const TEAN_UL gk_xtean_delta = 0x57E89147;
+static const TEAN_WORD gk_tean_delta = 0x9E3779B9;
+static const TEAN_WORD gk_xtean_delta = 0x57E89147;
 
 //! TEA加密轮数，16轮，一般32轮，推荐64轮
 static const size_t gk_tean_round = 0x10;
@@ -63,14 +63,14 @@ static const short gk_tea_4210 = 0x4210;
 
 TEAN_DATA TeaEncipher(const TEAN_DATA&    encrypt_data,
                       const TEAN_KEY&     key,
-                      const TEAN_UL       delta,
+                      const TEAN_WORD     delta,
                       const size_t        xtea_round)
   {
   TEAN_DATA data(
     (gk_tean_need_bswap ? bswap(encrypt_data.A) : encrypt_data.A),
     (gk_tean_need_bswap ? bswap(encrypt_data.B) : encrypt_data.B));
 
-  TEAN_UL sum = delta;
+  TEAN_WORD sum = delta;
   for(size_t i = 0; i < xtea_round; ++i)
     {
     data.A += ((data.B << 4) + key.K1) ^
@@ -96,7 +96,7 @@ static TEAN_DATA TeaEncipherRound(TEAN_DATA&        data,
                                   TEAN_DATA&        pre_data,
                                   const TEAN_KEY&   key,
                                   TEAN_DATA&        cipher,
-                                  const TEAN_UL     delta,
+                                  const TEAN_WORD   delta,
                                   const size_t      xtea_round)
   {
   data.A ^= cipher.A;
@@ -111,7 +111,7 @@ static TEAN_DATA TeaEncipherRound(TEAN_DATA&        data,
 string TeaEncrypt(const void*       encrypt_data,
                   const size_t      encrypt_size,
                   const TEAN_KEY&   encrypt_key,
-                  const TEAN_UL     delta,
+                  const TEAN_WORD   delta,
                   const size_t      xtea_round)
   {
   string rets;
@@ -173,7 +173,7 @@ string TeaEncrypt(const void*       encrypt_data,
       {
       if(i <= 2)      //轮数大于2时，头两轮使用数据头，轮数大于1时，首轮使用数据头
         {
-        data = header[i-1];
+        data = header[i - 1];
         }
       else           //其余轮使用正式数据本身
         {
@@ -195,7 +195,7 @@ string TeanEncrypt(const void* encrypt_data, const size_t encrypt_size, const TE
 
 TEAN_DATA TeaDecipher(const TEAN_DATA&    decrypt_data,
                       const TEAN_KEY&     key,
-                      const TEAN_UL       delta,
+                      const TEAN_WORD     delta,
                       const size_t        xtea_round)
   {
   TEAN_DATA data(
@@ -206,7 +206,7 @@ TEAN_DATA TeaDecipher(const TEAN_DATA&    decrypt_data,
 #pragma warning(push)
 #pragma warning(disable:4307)   //C4307: “*”: 整型常量溢出
 #endif
-  TEAN_UL sum = delta * (TEAN_UL)xtea_round;
+  TEAN_WORD sum = delta * (TEAN_WORD)xtea_round;
 #ifdef _WIN32
 #pragma warning(pop)
 #endif
@@ -237,7 +237,7 @@ static TEAN_DATA TeaDecipherRound(TEAN_DATA&        cipher,
                                   TEAN_DATA&        pre_cipher,
                                   const TEAN_KEY&   key,
                                   TEAN_DATA&        pre_data,
-                                  const TEAN_UL     delta,
+                                  const TEAN_WORD   delta,
                                   const size_t      xtea_round)
   {
   pre_data.A ^= cipher.A;
@@ -257,7 +257,7 @@ static TEAN_DATA TeaDecipherRound(TEAN_DATA&        cipher,
 string TeaDecrypt(const void*       decrypt_data,
                   const size_t      decrypt_size,
                   const TEAN_KEY&   decrypt_key,
-                  const TEAN_UL     delta,
+                  const TEAN_WORD   delta,
                   const size_t      xtea_round)
   {
   string rets;
@@ -303,7 +303,7 @@ string TeaDecrypt(const void*       decrypt_data,
     rets.clear();
     return rets;
     }
-  rets.erase(0,padding_num);  //丢弃填充数据头
+  rets.erase(0, padding_num); //丢弃填充数据头
 
   //最后一次确认填充数
   const size_t chk_padding_num =

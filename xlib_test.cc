@@ -24,9 +24,9 @@ bool Add_XLIB_TEST_ROUTINE(const char* const name, xlib_test_routine func)
 #ifdef _WIN32
 #include <tchar.h>
 int _tmain(int , _TCHAR* )
-#else   // _WIN32
+#else
 int main()
-#endif  // _WIN32
+#endif
   {
   try
     {

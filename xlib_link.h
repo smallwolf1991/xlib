@@ -66,6 +66,6 @@
 
 #pragma comment(lib, "xlib_" AUTOLINK_VER)
 
-#endif  // _WIN32  XLIB_ALREADY_LINK
+#endif  // _WIN32  !XLIB_ALREADY_LINK
 
 #endif  // _XIB_LINK_H_

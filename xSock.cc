@@ -167,16 +167,25 @@ sockaddr_in AddrInfo(const uint32 host, const uint16 ports)
   return addrto;
   }
 
+
 string IpString(const sockaddr_in& addr)
   {
+#if defined(_WIN32) && !defined(_WIN64)
+  // XP的ws2_32没有inet_ntop导出
+  return  xmsg()
+    << (int)addr.sin_addr.s_net   << '.'
+    << (int)addr.sin_addr.s_host << '.'
+    << (int)addr.sin_addr.s_lh << '.'
+    << (int)addr.sin_addr.s_impno << ':'
+    << (int)htons(addr.sin_port);
+#else
   char ips[0x40];
-
   if(nullptr == inet_ntop(AF_INET, (void*)&(addr.sin_addr), ips, sizeof(ips)))
     {
     xSockExpt("inet_ntop");
     }
-
-  return xmsg() << ips << ':' << (short)htons(addr.sin_port);
+  return xmsg() << ips << ':' << (int)htons(addr.sin_port);
+#endif
   }
 
 

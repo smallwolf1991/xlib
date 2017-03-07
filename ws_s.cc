@@ -8,12 +8,12 @@ using std::string;
 
 #include "xlib_nt.h"
 
-string ws2s(const ucs2string& ws)
+string ws2s(const charucs2_t* const ws, const size_t size)
   {
   string s;
-  if(ws.empty())  return s;
+  if(ws == nullptr || size == 0)  return s;
 
-  const size_t wlen = ws.size() * sizeof(charucs2_t);
+  const size_t wlen = size * sizeof(charucs2_t);
 
   size_t wused = 0;
 
@@ -25,7 +25,7 @@ string ws2s(const ucs2string& ws)
     UNICODE_STRING us;
     us.Length = (USHORT)wnow;
     us.MaximumLength = (USHORT)wnow;
-    us.Buffer = (PWCH)(ws.c_str() + wused / sizeof(charucs2_t));
+    us.Buffer = (PWCH)(ws + wused / sizeof(charucs2_t));
 
     ANSI_STRING as;
     as.Length = 0;
@@ -46,12 +46,17 @@ string ws2s(const ucs2string& ws)
   return s;
   }
 
-ucs2string s2ws(const string& s)
+string ws2s(const ucs2string& ws)
+  {
+  return ws2s(ws.c_str(), ws.size());
+  }
+
+ucs2string s2ws(const char* const s, const size_t size)
   {
   ucs2string  ws;
-  if(s.empty()) return ws;
+  if(s == nullptr || size == 0) return ws;
 
-  const size_t slen = s.size();
+  const size_t slen = size;
 
   size_t sused = 0;
 
@@ -63,7 +68,7 @@ ucs2string s2ws(const string& s)
     ANSI_STRING as;
     as.Length = (USHORT)snow;
     as.MaximumLength = (USHORT)snow;
-    as.Buffer = (PCH)(s.c_str() + sused);
+    as.Buffer = (PCH)(s + sused);
 
     UNICODE_STRING us;
     us.Length = 0;
@@ -84,22 +89,28 @@ ucs2string s2ws(const string& s)
   return ws;
   }
 
+ucs2string s2ws(const string& s)
+  {
+  return s2ws(s.c_str(), s.size());
+  }
+
 #else   // _WIN32
 
 #include <iconv.h>
 
-string ws2s(const ucs2string& ws)
+
+string ws2s(const charucs2_t* const ws, const size_t size)
   {
   string s;
-  if(ws.empty())  return s;
+  if(ws == nullptr || size == 0)  return s;
 
   iconv_t cd = iconv_open(set_ascii_encode(nullptr), "UCS2");
   if(cd == 0) return 0;
 
-  const size_t wlen = ws.size() * sizeof(charucs2_t);
+  const size_t wlen = size * sizeof(charucs2_t);
 
   char* const lpnew = new char[wlen];
-  char* inbuf = (char*)ws.c_str();
+  char* inbuf = (char*)ws;
   char* outbuf = lpnew;
   size_t inlen = wlen;
   size_t outlen = wlen;
@@ -119,19 +130,25 @@ string ws2s(const ucs2string& ws)
   return s;
   }
 
-ucs2string s2ws(const string& s)
+
+string ws2s(const ucs2string& ws)
+  {
+  return ws2s(ws.c_str(), ws.size());
+  }
+
+ucs2string s2ws(const char* const s, const size_t size)
   {
   ucs2string ws;
-  if(s.empty())  return ws;
+  if(s == nullptr || size == 0)  return ws;
 
   iconv_t cd = iconv_open("UCS2", set_ascii_encode(nullptr));
   if(cd == 0) return 0;
 
-  const size_t slen = s.size();
+  const size_t slen = size;
   const size_t wlen = slen * sizeof(charucs2_t);
 
   char* lpnew = new char[wlen];
-  char* inbuf = (char*)s.c_str();
+  char* inbuf = (char*)s;
   char* outbuf = lpnew;
   size_t inlen = slen;
   size_t outlen = wlen;
@@ -149,6 +166,11 @@ ucs2string s2ws(const string& s)
   ws.assign((charucs2_t*)lpnew, outlen);
   delete[] lpnew;
   return ws;
+  }
+
+ucs2string s2ws(const string& s)
+  {
+  return s2ws(s.c_str(), s.size());
   }
 
 const char* set_ascii_encode(const char* new_encode)

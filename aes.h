@@ -23,10 +23,10 @@ class AesKey
   public:
     /*!
       指定key串。16 byte （128 bit）\n
-      当len == 0时，视key为0结尾的ASCII字符串\n
+      当size == 0时，视key为0结尾的ASCII字符串\n
       如果数据不足，其后以0补充
     */
-    AesKey(const void* key, size_t len = 0);
+    AesKey(const void* key, size_t size = 0);
   public:
     unsigned char _key[128 / 8];
   };
@@ -52,7 +52,7 @@ std::string AesEncrypt(const void* data, const size_t size, const AesKey& key);
 //! AES解密
 /*!
   \param data   需要解密的数据指针
-  \param size   需要加密数据的长度（需要128 bit对齐，不成块部分则加入不处理）
+  \param size   需要解密数据的长度（需要128 bit对齐，不成块部分则加入不处理）
   \param key    参与解密数据的密钥
   \return       返回数据解密结果
 

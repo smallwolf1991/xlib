@@ -2,16 +2,16 @@
 
 using std::string;
 
-DesKey::DesKey(const void* key, size_t len)
+DesKey::DesKey(const void* key, size_t size)
   {
   memset(_key, 0, sizeof(_key));
-  if(len == 0)
+  if(size == 0)
     {
     const char* k = (const char*)key;
-    while(k[len] != '\0') ++len;
+    while(k[size] != '\0') ++size;
     }
-  if(len > sizeof(_key))  len = sizeof(_key);
-  memcpy(_key, key, len);
+  if(size > sizeof(_key))  size = sizeof(_key);
+  memcpy(_key, key, size);
   }
 
 //! 初始置换表

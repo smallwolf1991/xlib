@@ -46,7 +46,7 @@ xblk::PosDcrpt xblk::checkin(void* const starts, void* const ends) const
   const unsigned char* const e = (unsigned char*)end();
   const unsigned char* ss = (unsigned char*)starts;
   const unsigned char* ee = (unsigned char*)ends;
-  seqswap(ss,ee);
+  seqswap(ss, ee);
   if(ss < s)
     {
     if(ee < s)  return PD_NoIn;

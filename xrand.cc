@@ -12,10 +12,10 @@ size_t xrand(const size_t mod)
   const size_t r = __rdtsc();
 #if _WIN64
   const int l = r % 64;
-  gk_xrand_seed += _rotl64(r,l);
+  gk_xrand_seed += _rotl64(r, l);
 #else
   const int l = r % 32;
-  gk_xrand_seed += _lrotl(r,l);
+  gk_xrand_seed += _lrotl(r, l);
 #endif
   return (mod) ? (gk_xrand_seed % mod) : (gk_xrand_seed);
   }
@@ -31,8 +31,15 @@ size_t xrand(const size_t mod)
   static size_t gk_xrand_seed = 0;
   timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
-  gk_xrand_seed += t.tv_nsec;
-  gk_xrand_seed *= t.tv_nsec;
+#ifdef __amd64
+  const size_t r = t.tv_nsec * 0x100000000 + t.tv_nsec;
+  const int l = r % 64;
+  gk_xrand_seed += (((r) << (l)) | (((r)& 0xffffffffffffffff) >> (64 - (l))));
+#else
+  const size_t r = t.tv_nsec;
+  const int l = r % 32;
+  gk_xrand_seed += (((r) << (l)) | (((r)& 0xffffffff) >> (32 - (l))));
+#endif
   return (mod) ? (gk_xrand_seed % mod) : (gk_xrand_seed);
   }
 
