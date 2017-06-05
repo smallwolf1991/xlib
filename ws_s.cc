@@ -46,11 +46,6 @@ string ws2s(const charucs2_t* const ws, const size_t size)
   return s;
   }
 
-string ws2s(const ucs2string& ws)
-  {
-  return ws2s(ws.c_str(), ws.size());
-  }
-
 ucs2string s2ws(const char* const s, const size_t size)
   {
   ucs2string  ws;
@@ -89,11 +84,6 @@ ucs2string s2ws(const char* const s, const size_t size)
   return ws;
   }
 
-ucs2string s2ws(const string& s)
-  {
-  return s2ws(s.c_str(), s.size());
-  }
-
 #else   // _WIN32
 
 #include <iconv.h>
@@ -130,12 +120,6 @@ string ws2s(const charucs2_t* const ws, const size_t size)
   return s;
   }
 
-
-string ws2s(const ucs2string& ws)
-  {
-  return ws2s(ws.c_str(), ws.size());
-  }
-
 ucs2string s2ws(const char* const s, const size_t size)
   {
   ucs2string ws;
@@ -168,11 +152,6 @@ ucs2string s2ws(const char* const s, const size_t size)
   return ws;
   }
 
-ucs2string s2ws(const string& s)
-  {
-  return s2ws(s.c_str(), s.size());
-  }
-
 const char* set_ascii_encode(const char* new_encode)
   {
   static const char* const default_encode = "GB2312";
@@ -191,6 +170,16 @@ const char* set_ascii_encode(const char* new_encode)
   }
 
 #endif  // _WIN32
+
+string ws2s(const ucs2string& ws)
+  {
+  return ws2s(ws.c_str(), ws.size());
+  }
+
+ucs2string s2ws(const string& s)
+  {
+  return s2ws(s.c_str(), s.size());
+  }
 
 #ifdef _XLIB_TEST_
 

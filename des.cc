@@ -399,7 +399,7 @@ ADD_XLIB_TEST(DES)
 
   bool done = false;
 
-  const DesKey key("12345678");
+  const string key("12345678");
   const string data("12345678");
   const string enc("\x96\xD0\x02\x88\x78\xD5\x8C\x89");
 

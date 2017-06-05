@@ -23,8 +23,6 @@ SysSnap::SysSnap(SYSTEM_INFORMATION_CLASS SystemInformationClass)
     }
   }
 
-
-
 SysProcessSnap::const_iterator::const_iterator(const SYSTEM_PROCESS_INFORMATION* p)
 : _p(p)
   {
@@ -83,8 +81,6 @@ SysProcessSnap::const_iterator SysProcessSnap::end() const
   return nullptr;
   }
 
-
-
 SysThreadSnap::SysThreadSnap(HANDLE PID)
 :_p(nullptr)
   {
@@ -108,8 +104,6 @@ const SYSTEM_THREAD* SysThreadSnap::end() const
   if(_p == nullptr) return nullptr;
   return &(_p->Threads[_p->NumberOfThreads]);
   }
-
-
 
 SysDriverSnap::SysDriverSnap()
 :SysSnap(SystemModuleInformation)

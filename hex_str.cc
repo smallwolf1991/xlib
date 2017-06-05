@@ -513,21 +513,14 @@ ADD_XLIB_TEST(HEX_STR)
 
   const char* const buf = "12345678";
   const char* const hex = "3132333435363738";
-  const size_t hexl = 16;
   string rets;
 
-  SHOW_TEST_HEAD("hex2str string");
-  rets = hex2str(string(buf));
-  done = (rets.size() == hexl) && (0 == memcmp(rets.c_str(), hex, rets.size()));
+  SHOW_TEST_HEAD("hex2str");
+  done = (hex2str(string(buf)) == hex);
   SHOW_TEST_RESULT(done);
 
   SHOW_TEST_HEAD("str2hex");
   done = (0x12345678 == str2hex(string(buf)));
-  SHOW_TEST_RESULT(done);
-
-  SHOW_TEST_HEAD("str2hexs");
-  rets = hex2str(string(buf));
-  done = (rets.size() == hexl) && (rets == string(hex));
   SHOW_TEST_RESULT(done);
 
   SHOW_TEST_HEAD("hex2show");

@@ -371,7 +371,7 @@ ADD_XLIB_TEST(AES)
 
   bool done = false;
 
-  const AesKey key("012345678ABCDEF");
+  const string key("012345678ABCDEF");
   const string data("1234567812345678");
   const string enc("\xAC\x69\xF1\xA1\xE1\x4A\x0C\x37\x37\x91\xEB\xDE\xAA\x7B\x08\xF4");
 

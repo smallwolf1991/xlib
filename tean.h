@@ -17,7 +17,7 @@
   - 结果用TEA算法解密，pre_data = TEA_D(pre_data, key)；
   - 明文由结果与上组密文异或得到，data = pre_data ^ pre_cipher
 
-  \version    3.0.1612.1615
+  \version    3.1.1706.0215
   \note       For All
 
   \author     triones
@@ -43,7 +43,10 @@ class TEAN_DATA
     TEAN_DATA();
     TEAN_DATA(const TEAN_WORD a, const TEAN_WORD b);
     TEAN_DATA(const void* datas);
-    operator std::string();
+    template<typename T> operator std::basic_string<T>()
+      {
+      return std::basic_string<T>((const T*)Data, sizeof(Data) / sizeof(T));
+      }
   public:
     union
       {
@@ -65,7 +68,14 @@ class TEAN_KEY
              const TEAN_WORD k2,
              const TEAN_WORD k3,
              const TEAN_WORD k4);
-    TEAN_KEY(const void* key);
+    TEAN_KEY(const void* key, size_t size = 0);
+    template<typename T> TEAN_KEY(const std::basic_string<T>& key)
+      {
+      memset(Key, 0, sizeof(Key));
+      size_t size = key.size() * sizeof(T);
+      if(size > sizeof(Key)) size = sizeof(Key);
+      memcpy(Key, key.c_str(), size);
+      }
   public:
     union
       {
@@ -96,7 +106,7 @@ TEAN_DATA TeaDecipher(const TEAN_DATA&    data,
 std::string TeaEncrypt(const void*        data,
                        const size_t       size,
                        const TEAN_KEY&    key,
-                       const TEAN_WORD      delta,
+                       const TEAN_WORD    delta,
                        const size_t       xtea_round);
 
 std::string TeaDecrypt(const void*        data,

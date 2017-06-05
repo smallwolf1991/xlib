@@ -54,7 +54,7 @@ uint64 crc64(const void* data, const size_t size);
   \return           返回crc ccitt值
 
   \code
-    cout << crcccitt("012345");
+    cout << crcccitt(string("012345"));
   \endcode
 */
 uint16 crcccitt(const void* data, const size_t size);

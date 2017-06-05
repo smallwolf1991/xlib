@@ -20,12 +20,6 @@ TEAN_DATA::TEAN_DATA(const void* datas)
   memcpy(Data, datas, sizeof(Data));
   }
 
-TEAN_DATA::operator string()
-  {
-  return string((const char*)Data, sizeof(Data));
-  }
-
-
 TEAN_KEY::TEAN_KEY()
 :K1(0), K2(0), K3(0), K4(0)
   {
@@ -39,9 +33,16 @@ TEAN_KEY::TEAN_KEY(const TEAN_WORD k1,
   {
   }
 
-TEAN_KEY::TEAN_KEY(const void* key)
+TEAN_KEY::TEAN_KEY(const void* key, size_t size)
   {
-  memcpy(Key, key, sizeof(Key));
+  memset(Key, 0, sizeof(Key));
+  if(size == 0)
+    {
+    const char* k = (const char*)key;
+    while(k[size] != '\0') ++size;
+    }
+  if(size > sizeof(Key))  size = sizeof(Key);
+  memcpy(Key, key, size);
   }
 
 //! 魔术常量 == 实数部分(2^32 * 黄金比例ψ)。ψ == sqrt(5/4) - 1/2 ≈ 0.618034;

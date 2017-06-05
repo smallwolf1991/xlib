@@ -213,7 +213,7 @@ std::string hex2show(const std::basic_string<T>&  data,
   }
 
 template<typename T>
-std::string hex2show(const std::basic_string<T>&  data)
+std::string hex2show(const std::basic_string<T>& data)
   {
   return hex2show((void*)data.c_str(),
                   data.size() * sizeof(T),
@@ -221,7 +221,7 @@ std::string hex2show(const std::basic_string<T>&  data)
   }
 
 template<typename T>
-std::string hex2show(const std::basic_string<T>&  data, const Hex2showCode code)
+std::string hex2show(const std::basic_string<T>& data, const Hex2showCode code)
   {
   return hex2show((void*)data.c_str(),
                   data.size() * sizeof(T),
@@ -229,7 +229,7 @@ std::string hex2show(const std::basic_string<T>&  data, const Hex2showCode code)
   }
 
 template<typename T>
-std::string hex2show(const std::basic_string<T>&  data, const bool isup)
+std::string hex2show(const std::basic_string<T>& data, const bool isup)
   {
   return hex2show((void*)data.c_str(),
                   data.size() * sizeof(T),
@@ -237,7 +237,7 @@ std::string hex2show(const std::basic_string<T>&  data, const bool isup)
   }
 
 template<typename T>
-std::string hex2show(const std::basic_string<T>&  data, const size_t prews) // 需要强制类型哦
+std::string hex2show(const std::basic_string<T>& data, const size_t prews) // 需要强制类型哦
   {
   return hex2show((void*)data.c_str(),
                   data.size() * sizeof(T),

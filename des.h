@@ -5,7 +5,7 @@
   - 参考来自http://pangzi.is-programmer.com/posts/25161.html
   - 参考来自http://www.cnblogs.com/erwin/archive/2009/04/14/1435288.html
 
-  \version    2.0.1612.1611
+  \version    2.1.1706.0210
   \note       For All
 
   \author     triones
@@ -27,6 +27,13 @@ class DesKey
     如果数据不足，其后以0补充
     */
     DesKey(const void* key, size_t size = 0);
+    template<typename T> DesKey(const std::basic_string<T>& key)
+      {
+      memset(_key, 0, sizeof(_key));
+      size_t size = key.size() * sizeof(T);
+      if(size > sizeof(_key)) size = sizeof(_key);
+      memcpy(_key, key.c_str(), size);
+      }
   public:
     unsigned char _key[64 / 8];
   };
@@ -41,7 +48,7 @@ class DesKey
   \code
     const DesKey key("12345678");
     string aa;
-    while(cin>>aa)
+    while(cin >> aa)
       {
       cout << hex2show(DesEncrypt(aa, key)) << endl;
       }

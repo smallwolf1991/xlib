@@ -32,7 +32,10 @@ class MD5_VALUE
               const MD5_DWORD c,
               const MD5_DWORD d);
     MD5_VALUE(const void* data);
-    operator std::string();
+    template<typename T> operator std::basic_string<T>()
+      {
+      return std::basic_string<T>((const T*)Data, sizeof(Data) / sizeof(T));
+      }
   public:
     union
       {

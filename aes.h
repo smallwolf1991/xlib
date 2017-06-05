@@ -5,7 +5,7 @@
   - 参考来自http://mingcn.cnblogs.com/archive/2010/10/31/aes_c.html
   - 源作者：xelz
 
-  \version    2.0.1611.1511
+  \version    2.1.1706.0210
   \note       For All
 
   \author     triones
@@ -27,6 +27,13 @@ class AesKey
       如果数据不足，其后以0补充
     */
     AesKey(const void* key, size_t size = 0);
+    template<typename T> AesKey(const std::basic_string<T>& key)
+      {
+      memset(_key, 0, sizeof(_key));
+      size_t size = key.size() * sizeof(T);
+      if(size > sizeof(_key)) size = sizeof(_key);
+      memcpy(_key, key.c_str(), size);
+      }
   public:
     unsigned char _key[128 / 8];
   };

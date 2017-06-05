@@ -39,14 +39,14 @@
 //以下文件都默认包含xlib_base.h
 #include "xlib_nt.h"            //+20161114   open          base/nt
 
-#include "aes.h"                //+20161216   locked        algorithm/aes
+#include "aes.h"                //+20170602   locked        algorithm/aes
 #include "crc.h"                //+20161216   locked        algorithm/crc
-#include "des.h"                //+20161216   locked        algorithm/des
+#include "des.h"                //+20170602   locked        algorithm/des
 #include "swap.h"               //-20161114   locked        memory/swap
-#include "md5.h"                //+20161115   locked        algorithm/md5
+#include "md5.h"                //+20170602   locked        algorithm/md5
 //              swap.h
 #include "xrand.h"              //+20161114   locked        algorithm/xrand
-#include "tean.h"               //+20161216   locked        algorithm/tean
+#include "tean.h"               //+20170602   locked        algorithm/tean
 //              xrand.h
 #include "singleton.h"          //-20121112   locked        container/singleton
 #include "xline.h"              //-20161115   locked        container/xline
@@ -88,7 +88,7 @@
 #include "caller.h"             //+20150721   locked        memory/caller
 //              hook.h
 //              xevent.h
-#include "signaturematcher.h"   //+20160406   check         memory/signaturematcher
+#include "signaturematcher.h"   //+20170606   check         memory/signaturematcher
 //          xline.h
 //          xblk.h
 //              xlog.h

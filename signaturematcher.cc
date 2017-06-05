@@ -203,7 +203,7 @@ namespace signaturematcher
   class LexicalBase
     {
     public:
-      LexicalBase(LexicalType t = LT_Error,const Range& r = gk_normal_range)
+      LexicalBase(LexicalType t = LT_Error, const Range& r = gk_normal_range)
         :type(t), range(r), match_count(-1)
         {
         ;
@@ -711,7 +711,7 @@ namespace signaturematcher
         {
         for(size_t i = 0; i < size(); ++i)
           {
-          if(!((TA^i) & (TB^i)))
+          if(!((TA ^ i) & (TB ^ i)))
             set(i);
           }
         return *this;
@@ -2070,6 +2070,7 @@ namespace signaturematcher
         {
         for(auto lb : vec)
           {
+          lp -= lb->match_count;
           lb->match_count = -1;
           }
         continue;

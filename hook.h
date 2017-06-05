@@ -95,7 +95,7 @@ bool Hookit(LPVOID mem, LPCVOID hookcode, const size_t len);
 bool Nopit(LPVOID mem, const size_t len);
 
 //!< 地址偏移，x86与x64都是4 byte
-typedef unsigned __int32 AddrDisp;
+typedef uint32 AddrDisp;
 
 /*!
   偏移计算
@@ -176,17 +176,17 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
     - 6-13：采用jmp qword ptr [XXX]，偏移超出采用UEF。采用UEF时，有覆盖判定
     - 14以上：采用jmp qword ptr [XXX]
 
-  \param  hookmem     指定hook内存的位置
-  \param  hooksize    hook长度[1 ~ 30]
-  \param  routine     指定的回调函数(声明请参考HookRoutine)
-  \param  docodeend   true：覆盖代码后于回调执行，false：代码先行
-  \param  p_shellcode 指定中转shellcode的存放位置\n
-                      x86下可忽略，为兼容而设计。但设置也不影响使用\n
-                      x64下用于避免偏移超出而自动采用UEF。\n
-                      x86请提供至少0x1C + hooksize大小的空间\n
-                      x64请提供至少0x3C + hooksize大小的空间
-  \return             钩子结点指针，用于UnHook。\n
-                      当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
+  \param  hookmem       指定hook内存的位置
+  \param  hooksize      hook长度[1 ~ 30]
+  \param  routine       指定的回调函数(声明请参考HookRoutine)
+  \param  routinefirst  true：回调先行，false：覆盖代码先行
+  \param  p_shellcode   指定中转shellcode的存放位置\n
+                        x86下可忽略，为兼容而设计。但设置也不影响使用\n
+                        x64下用于避免偏移超出而自动采用UEF。\n
+                        x86请提供至少0x1C + hooksize大小的空间\n
+                        x64请提供至少0x3C + hooksize大小的空间
+  \return               钩子结点指针，用于UnHook。\n
+                        当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
 
   \code
     #include "hook.h"
@@ -196,9 +196,9 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
       }
     //在0x401000下5 byte JMP XXX钩子，代码先行
     HookNode* node = Hook((void*)0x401000, 5, Routine, false);
-    //在0x401000下6 byte JMP [XXX]钩子，代码后行
+    //在0x401000下6 byte JMP [XXX]钩子，回调先行
     HookNode* node = Hook((void*)0x401000, 6, Routine, true);
-    //在0x401000下1 byte UEF钩子，代码后行
+    //在0x401000下1 byte UEF钩子，回调先行
     HookNode* node = Hook((void*)0x401000, 1, Routine, true);
     if(node == nullptr)
       {
@@ -222,24 +222,24 @@ typedef void(*HookRoutine)(CPU_ST* lpcpu);
 HookNode* Hook(void*              hookmem,
                const size_t       hooksize,
                HookRoutine        routine,
-               const bool         docodeend,
+               const bool         routinefirst,
                void*              p_shellcode = nullptr);
 
  /*!
   指定跳转表或call偏移位置，执行Hook操作。
 
-  \param  hookmem     跳转表位置或call偏移位置
-  \param  routine     指定的回调函数(声明请参考HookRoutine)
+  \param  hookmem       跳转表位置或call偏移位置
+  \param  routine       指定的回调函数(声明请参考HookRoutine)
   \param  calltable_offset    指明是跳转表或call偏移
-  \param  docallend   指明覆盖函数后于回调执行，或是先于回调执行
-  \param  p_shellcode 指定中转shellcode的存放位置\n
-                      x86下可忽略，为兼容而设计。但设置也不影响使用\n
-                      x64下用于避免偏移超出而无法HOOK。\n
-                      x86请提供至少0x1D空间\n
-                      x64请提供至少0x5E空间
-  \param  expandargc  覆盖函数可能存在参数过多的现象，以调整栈平衡
-  \return             钩子结点指针，同样可以用UnHook卸载钩子。\n
-                      当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
+  \param  routinefirst  指明覆盖函数后于回调执行，或是先于回调执行
+  \param  p_shellcode   指定中转shellcode的存放位置\n
+                        x86下可忽略，为兼容而设计。但设置也不影响使用\n
+                        x64下用于避免偏移超出而无法HOOK。\n
+                        x86请提供至少0x1D空间\n
+                        x64请提供至少0x5E空间
+  \param  expandargc    覆盖函数可能存在参数过多的现象，以调整栈平衡
+  \return               钩子结点指针，同样可以用UnHook卸载钩子。\n
+                        当执行失败时，返回nullptr。此时应调用GetLastHookErr得到失败原因
 
   \code
     #include "hook.h"
@@ -262,15 +262,15 @@ HookNode* Hook(void*              hookmem,
 
   \note
   - 覆盖跳转表或call偏移位置时，无视覆盖函数的调用格式。
-  - 注意，docallend==true时，EIP为覆盖函数地址，Routine可选择改变之，但此时请特别注意原函数的调用格式，改变EIP可跳过原函数的执行。docallend==false时，EIP为返回地址，Routine也可选择改变之
-  - docallend==true时，Hook保证寄存器前后一致。docallend==false时，Hook保证除esp外的寄存器在原函数调用前一致，局部环境一致。Routine调用寄存器前后一致。出Hook时寄存器一致，局部环境一致。（不因Hook而造成任何寄存器变动及栈飘移）
+  - 注意，routinefirst==true时，EIP为覆盖函数地址，Routine可选择改变之，但此时请特别注意原函数的调用格式，改变EIP可跳过原函数的执行。routinefirst==false时，EIP为返回地址，Routine也可选择改变之
+  - routinefirst==true时，Hook保证寄存器前后一致。routinefirst==false时，Hook保证除esp外的寄存器在原函数调用前一致，局部环境一致。Routine调用寄存器前后一致。出Hook时寄存器一致，局部环境一致。（不因Hook而造成任何寄存器变动及栈飘移）
   - 使用MoveHookCallTableShellCode()伪造返回地址。
   - 未特殊说明的情况，参考Hook函数声明。
  */
  HookNode* Hook(void*             hookmem,
                 HookRoutine       routine,
                 const bool        calltable_offset,
-                const bool        docallend,
+                const bool        routinefirst,
                 void*             p_shellcode = nullptr,
                 const intptr_t    expandargc = 0);
 
@@ -304,6 +304,7 @@ bool UnHook(HookNode* node, const bool errbreak);
 /*!
   注意HookClear执行的是强制卸载操作，会尝试卸载链表中的每个钩子\n
   一般应用于动态库卸载的清理流程中。
+  Ring3条件下，如果对卸载时机没有特殊要求，宿主卸载时，钩子链表会自动卸载，
 
   \return   当执行失败时，调用GetLastHookErr得到失败原因。
 */
@@ -448,7 +449,7 @@ HookNode* Hook2Log(void*              hookmem,
                    const size_t       hooksize,
                    const char*        data_descibe,
                    const char*        len_descibe,
-                   const bool         docodeend,
+                   const bool         logfirst,
                    const char*        head_msg = nullptr,
                    hook2log_out_func  log_out_func = nullptr,
                    void*              p_shellcode = nullptr);
@@ -460,7 +461,7 @@ HookNode* Hook2Log(void*              hookmem,
                    const char*        data_descibe,
                    const char*        len_descibe,
                    const bool         calltable_offset,
-                   const bool         docallend,
+                   const bool         logfirst,
                    const char*        head_msg = nullptr,
                    hook2log_out_func  log_out_func = nullptr,
                    void*              p_shellcode = nullptr,

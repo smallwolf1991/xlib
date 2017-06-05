@@ -22,9 +22,8 @@ class xevent
   {
   public:
     //! 默认自动复位，初始未激发
-    xevent(
-      BOOL bManualReset = FALSE,
-      BOOL bInitialState = FALSE);
+    xevent(BOOL bManualReset = FALSE,
+           BOOL bInitialState = FALSE);
     ~xevent();
   public:
     bool wait();          //!等待事件
@@ -44,10 +43,9 @@ class xevent
   {
   public:
     //! 默认自动复位，初始未激发，无名
-    xevent(
-      BOOL    bManualReset = FALSE,
-      BOOL    bInitialState = FALSE,
-      LPCTSTR lpName = nullptr);
+    xevent(BOOL    bManualReset = FALSE,
+           BOOL    bInitialState = FALSE,
+           LPCTSTR lpName = nullptr);
     ~xevent();
   public:
     bool wait(const DWORD time = INFINITE);     //!等待事件

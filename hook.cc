@@ -107,10 +107,10 @@ static HookNode* MakeNode(void* hookmem, void* routine, const bool calltable_off
 static bool FixShellCode(HookNode* node, void* p_shellcode);
 
 //! 做普通hook shellcode
-static bool MakeShellCode_Normal(HookNode* node, const bool docodeend);
+static bool MakeShellCode_Normal(HookNode* node, const bool routinefirst);
 
 //! 做CallTable_Offset hook shellcode
-static bool MakeShellCode_CtOff(HookNode* node, const bool docallend, const intptr_t expandargc);
+static bool MakeShellCode_CtOff(HookNode* node, const bool routinefirst, const intptr_t expandargc);
 
 //! 做普通jmpcode
 static bool FixJmpCode_Normal(HookNode* node);
@@ -180,7 +180,7 @@ static __declspec(naked) void HookShellCode_Normal()
   $ ==>    >  68 XXXXXXXX            push    CoverCall
   $+5      >  68 XXXXXXXX            push    Routinue
   $+A      >  68 XXXXXXXX            push    HookArgc
-  $+F      >  6A 00|01               push    docallend
+  $+F      >  6A 00|01               push    routinefirst
   $+11     >  FF25 XXXXXXXX          jmp     dword ptr [gk_lp_HookShellCode_CtOff]
   $+17
   \endcode
@@ -192,8 +192,8 @@ static __declspec(naked) void HookShellCode_CtOff()
     pushfd
 
     xchg    eax, dword ptr [esp]          //eax为fd，原始值入栈
-    xchg    eax, dword ptr [esp + 4 * 1]  //eax为docallend，fd向下移
-    test    eax, eax                      //判定docallend
+    xchg    eax, dword ptr [esp + 4 * 1]  //eax为routinefirst，fd向下移
+    test    eax, eax                      //判定routinefirst
 
     pop     eax                           //还原eax
 
@@ -448,12 +448,12 @@ static __declspec(naked) void HookShellCode_Normal()
   $+2      >  XXXXXXXXXXXXXXXX       [CoverCall]
   $+A      >  XXXXXXXXXXXXXXXX       [Routine]
   $+12     >  XXXXXXXXXXXXXXXX       [HookArgc]
-  $+1A     >  XXXXXXXXXXXXXXXX       [docallend]
+  $+1A     >  XXXXXXXXXXXXXXXX       [routinefirst]
   $+22     >  XXXXXXXXXXXXXXXX       [gk_lp_HookShellCode_CtOff]
   $+2A     >  FF35 D2FFFFFF          push    qword ptr [CoverCall]
   $+30     >  FF35 D4FFFFFF          push    qword ptr [Routine]
   $+36     >  FF35 D6FFFFFF          push    qword ptr [HookArgc]
-  $+3C     >  FF35 D8FFFFFF          push    qword ptr [docallend]
+  $+3C     >  FF35 D8FFFFFF          push    qword ptr [routinefirst]
   $+42     >  FF35 DAFFFFFF          push    qword ptr [gk_lp_HookShellCode_CtOff]
   $+48     >  48 873C 24             xchg    rdi, qword ptr [rsp]
   $+4C     >  48 8B3F                mov     rdi, qword ptr [rdi]
@@ -469,7 +469,7 @@ static __declspec(naked) void HookShellCode_CtOff()
     pushfq
 
     xchg    rax, qword ptr [rsp]          //rax为fq，原始值入栈
-    xchg    rax, qword ptr [rsp + 8 * 1]  //rax为docallend，fq向下移
+    xchg    rax, qword ptr [rsp + 8 * 1]  //rax为routinefirst，fq向下移
     test    rax, rax
     pop     rax
 
@@ -1100,7 +1100,7 @@ bool FixShellCode(HookNode* node, void* p_shellcode)
   return false;
   }
 
-bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
+bool MakeShellCode_Normal(HookNode* node, const bool routinefirst)
   {
   XLIB_TRY
     {
@@ -1112,7 +1112,7 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
       { (unsigned char)'\xEB', (unsigned char)sizeof(void*), 0 };
     scs.append(head, sizeof(head));
 
-    if(!docodeend)    //代码前行需要先写原始代码
+    if(!routinefirst)    //代码前行需要先写原始代码
       {
       scs.append((const unsigned char*)node->mem, node->byte2cover);
       }
@@ -1121,7 +1121,7 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
       << '\x68' << (AddrDisp)node->routine
       << "\xFF\x15" << (AddrDisp)&gk_lp_HookShellCode_Normal;
 
-    if(docodeend)
+    if(routinefirst)
       {
       scs.append((const unsigned char*)node->mem, node->byte2cover);  //代码后行后写原始代码
       }
@@ -1132,7 +1132,7 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
       << node->ip << node->routine << (void*)gk_lp_HookShellCode_Normal
       << "\xFF\x35\xE2\xFF\xFF\xFF\xFF\x35\xE4\xFF\xFF\xFF\xFF\x15\xE6\xFF\xFF\xFF";
 
-    if(docodeend)
+    if(routinefirst)
       {
       scs.append((const unsigned char*)node->mem, node->byte2cover);  //代码后行后写原始代码
       scs << "\xFF\x25" << (AddrDisp)(0xFFFFFFD0 - node->byte2cover);
@@ -1153,7 +1153,7 @@ bool MakeShellCode_Normal(HookNode* node, const bool docodeend)
   return false;
   }
 
-bool MakeShellCode_CtOff(HookNode* node, const bool docallend, const intptr_t expandargc)
+bool MakeShellCode_CtOff(HookNode* node, const bool routinefirst, const intptr_t expandargc)
   {
   XLIB_TRY
     {
@@ -1173,12 +1173,12 @@ bool MakeShellCode_CtOff(HookNode* node, const bool docallend, const intptr_t ex
     scs << '\x68' << node->ip
       << '\x68' << node->routine
       << '\x68' << hookargc
-      << '\x6A' << (char)docallend
+      << '\x6A' << (char)routinefirst
       << "\xFF\x25" << (AddrDisp)&gk_lp_HookShellCode_CtOff;
 #else
     scs << "\xEB\x28"
       << node->ip << node->routine << hookargc
-      << (void*)docallend << (void*)&gk_lp_HookShellCode_CtOff
+      << (void*)routinefirst << (void*)&gk_lp_HookShellCode_CtOff
       << "\xFF\x35\xD2\xFF\xFF\xFF\xFF\x35\xD4\xFF\xFF\xFF\xFF\x35\xD6\xFF\xFF\xFF"
       << "\xFF\x35\xD8\xFF\xFF\xFF\xFF\x35\xDA\xFF\xFF\xFF"
       << "\x48\x87\x3C\x24\x48\x8B\x3F\x48\x87\x3C\x24\xC3";
@@ -1321,14 +1321,14 @@ bool HookIn(HookNode* node)
 HookNode* Hook(void*              hookmem,
                const size_t       hooksize,
                HookRoutine        routine,
-               const bool         docodeend,
+               const bool         routinefirst,
                void*              p_shellcode)
   {
   //////////////////////////////////////////////////////////////////////////第一步：MakeNode
   HookNode* node = MakeNode(hookmem, hooksize, routine);
   if(node == nullptr) return nullptr;
   //////////////////////////////////////////////////////////////////////////第二步：MakeShellCode
-  if(!MakeShellCode_Normal(node, docodeend))
+  if(!MakeShellCode_Normal(node, routinefirst))
     {
     delete node;
     return nullptr;
@@ -1356,7 +1356,7 @@ HookNode* Hook(void*              hookmem,
 HookNode* Hook(void*              hookmem,
                HookRoutine        routine,
                const bool         calltable_offset,
-               const bool         docallend,
+               const bool         routinefirst,
                void*              p_shellcode,
                const intptr_t     expandargc)
   {
@@ -1364,7 +1364,7 @@ HookNode* Hook(void*              hookmem,
   HookNode* node = MakeNode(hookmem, routine, calltable_offset);
   if(node == nullptr) return nullptr;
   //////////////////////////////////////////////////////////////////////////第二步：MakeShellCode
-  if(!MakeShellCode_CtOff(node, docallend, expandargc))
+  if(!MakeShellCode_CtOff(node, routinefirst, expandargc))
     {
     delete node;
     return nullptr;
@@ -2328,7 +2328,7 @@ HookNode* Hook2Log(void*              hookmem,
                    const size_t       hooksize,
                    const char*        data_descibe,
                    const char*        len_descibe,
-                   const bool         docodeend,
+                   const bool         logfirst,
                    const char*        head_msg,
                    hook2log_out_func  log_out_func,
                    void*              p_shellcode)
@@ -2348,7 +2348,7 @@ HookNode* Hook2Log(void*              hookmem,
   //写入真实的Routine地址，即生成的运算码
   node->routine = (void*)node->shellcode.c_str();
 
-  if(!MakeShellCode_Normal(node, docodeend))
+  if(!MakeShellCode_Normal(node, logfirst))
     {
     delete node;
     return nullptr;
@@ -2376,7 +2376,7 @@ HookNode* Hook2Log(void*              hookmem,
                    const char*        data_descibe,
                    const char*        len_descibe,
                    const bool         calltable_offset,
-                   const bool         docallend,
+                   const bool         logfirst,
                    const char*        head_msg,
                    hook2log_out_func  log_out_func,
                    void*              p_shellcode,
@@ -2393,7 +2393,7 @@ HookNode* Hook2Log(void*              hookmem,
 
   node->routine = (void*)node->shellcode.c_str();
 
-  if(!MakeShellCode_CtOff(node, docallend, expandargc))
+  if(!MakeShellCode_CtOff(node, logfirst, expandargc))
     {
     delete node;
     return nullptr;

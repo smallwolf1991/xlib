@@ -29,12 +29,6 @@ MD5_VALUE::MD5_VALUE(const void* data)
   memcpy(Data, data, sizeof(Data));
   }
 
-MD5_VALUE::operator string()
-  {
-  return string((const char*)Data, sizeof(Data));
-  }
-
-
 //! 主循环有四轮，一轮16次，二轮16次，三轮16次，四轮16次
 static const size_t gk_md5_step = 16 + 16 + 16 + 16;
 
@@ -244,8 +238,8 @@ ADD_XLIB_TEST(MD5)
   bool done = false;
 
   SHOW_TEST_HEAD("md5");
-  const auto rets = md5(string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"));
-  done = (0 == memcmp("\xF2\x99\x39\xA2\x5E\xFA\xBA\xEF\x3B\x87\xE2\xCB\xFE\x64\x13\x15", rets.Data, sizeof(rets)));
+  const string rets = md5(string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"));
+  done = (rets == "\xF2\x99\x39\xA2\x5E\xFA\xBA\xEF\x3B\x87\xE2\xCB\xFE\x64\x13\x15");
   SHOW_TEST_RESULT(done);
   }
 
